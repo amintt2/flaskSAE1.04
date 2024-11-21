@@ -1,0 +1,144 @@
+
+.creator-section {
+    margin-bottom: 3rem;
+    padding: 1rem;
+}
+
+
+.profile-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(22, 163, 74, 0.1);
+    padding: 2rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.profile-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 25px rgba(22, 163, 74, 0.15);
+}
+
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.profile-image {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: #f0fdf4;
+    border: 5px solid #16a34a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 15px rgba(22, 163, 74, 0.2);
+    transition: transform 0.3s ease;
+}
+
+.profile-image .profile-icon {
+    font-size: 3rem;
+    color: #16a34a;
+}
+
+.profile-image:hover {
+    transform: scale(1.05);
+}
+
+.profile-info h1 {
+    color: #166534;
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.profile-info .title {
+    color: #16a34a;
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+
+.profile-content p {
+    color: #4b5563;
+    line-height: 1.8;
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+.btn-primary {
+    background-color: #16a34a;
+    color: white;
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(22, 163, 74, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+    text-decoration: none; 
+    width: fit-content;
+    margin: 0 auto;
+}
+
+.btn-primary i {
+    font-size: 1.2rem;
+    transition: transform 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: #15803d;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(22, 163, 74, 0.3);
+    color: white; 
+}
+
+.btn-primary:hover i {
+    transform: scale(1.1);
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .profile-info {
+        text-align: center;
+    }
+
+    .profile-content {
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .profile-image {
+        width: 100px;
+        height: 100px;
+    }
+
+    .profile-image .profile-icon {
+        font-size: 2.5rem;
+    }
+
+    .profile-info h1 {
+        font-size: 1.5rem;
+    }
+
+    .btn-primary {
+        width: 100%;
+        padding: 0.8rem 1.5rem;
+    }
+} 

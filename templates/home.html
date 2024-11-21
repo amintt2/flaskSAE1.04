@@ -1,8 +1,10 @@
 {% extends "base.html" %}
+{% from 'accueil.html' import creator_sections %}
 
 {% block title %}Accueil - Maraîcher{% endblock %}
 
 {% block content %}
-<h1 class="text-4xl font-bold text-green-800 mb-4">Bienvenue chez Maraîcher Frais</h1>
-<p class="text-lg text-green-700">Découvrez nos fruits et légumes frais de saison !</p>
+<div class="container">
+    {{ creator_sections(creators) }}
+</div>
 {% endblock %}
