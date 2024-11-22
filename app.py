@@ -226,6 +226,43 @@ def delete_recolte():
     get_db().commit()
     return redirect('/recolte')
 
+@app.route('/conflicts/recolte/<int:recolte_id>')
+def show_recolte_conflicts(recolte_id):
+    mycursor = get_db().cursor()
+    
+    sql = """
+        SELECT r.*, p.nom_produit, m.Nom, m.Prénom 
+        FROM recolte r
+        LEFT JOIN Produit p ON r.ID_Produit = p.ID_Produit
+        LEFT JOIN Maraicher m ON r.ID_Maraicher = m.ID_Maraicher
+        WHERE r.ID_recolte = %s
+    """
+    mycursor.execute(sql, (recolte_id,))
+    recolte = mycursor.fetchone()
+    
+    if not recolte:
+        flash('Récolte non trouvée', 'error')
+        return redirect('/recolte')
+    
+    conflicts = {}
+    
+    if recolte['ID_Produit']:
+        conflicts['produit'] = {
+            'ID_Produit': recolte['ID_Produit'],
+            'nom_produit': recolte['nom_produit']
+        }
+    
+    if recolte['ID_Maraicher']:
+        conflicts['maraicher'] = {
+            'ID_Maraicher': recolte['ID_Maraicher'],
+            'Nom': recolte['Nom'],
+            'Prénom': recolte['Prénom']
+        }
+    
+    return render_template('recolte/conflict_recolte.html', 
+                         conflicts=conflicts if conflicts else None,
+                         recolte_id=recolte_id)
+
 @app.route('/vente')
 def vente():
     return render_template('vente/show_vente.html')
@@ -237,6 +274,8 @@ def produit():
 @app.route('/marche')
 def marche():
     return render_template('marche/show_marche.html')
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
