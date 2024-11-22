@@ -100,12 +100,35 @@ def add_recolte_get():
 
 @app.route('/recolte/add', methods=['POST'])
 def add_recolte_post():
+    mycursor = get_db().cursor()
     quantite = request.form.get('quantité', type=int)
     date_debut = request.form.get('Date_Debut')
     id_produit = request.form.get('ID_Produit', type=int)
     id_maraicher = request.form.get('ID_Maraicher', type=int)
-    
-    mycursor = get_db().cursor()
+
+    # Vérification pour le maraîcher
+    check_sql = """
+        SELECT * FROM recolte WHERE ID_Maraicher = %s
+    """
+    mycursor.execute(check_sql, (id_maraicher,))    
+    existing_recolte = mycursor.fetchone()
+
+    if existing_recolte:  # Supprimez la comparaison avec id_recolte car c'est un ajout
+        flash('Ce maraicher a déjà une récolte en cours', 'error')
+        return redirect('/recolte/add')
+
+    # Vérification pour le produit
+    check_sql = """
+        SELECT * FROM recolte WHERE ID_Produit = %s
+    """
+    mycursor.execute(check_sql, (id_produit,))
+    existing_recolte = mycursor.fetchone()
+
+    if existing_recolte:  # Supprimez la comparaison avec id_recolte car c'est un ajout
+        flash('Ce produit a déjà une récolte en cours', 'error')
+        return redirect('/recolte/add')
+
+    # Le reste du code reste inchangé
     sql = """
         INSERT INTO recolte (quantité, Date_Debut, ID_Produit, ID_Maraicher) 
         VALUES (%s, %s, %s, %s)
@@ -155,13 +178,35 @@ def edit_recolte():
 
 @app.route('/recolte/edit', methods=['POST'])
 def edit_recolte_post():
+    mycursor = get_db().cursor()
     id_recolte = request.form.get('ID_recolte', type=int)
     quantite = request.form.get('quantité', type=int)
     date_debut = request.form.get('Date_Debut')
     id_produit = request.form.get('ID_Produit', type=int)
     id_maraicher = request.form.get('ID_Maraicher', type=int)
+
+    check_sql = """
+        SELECT * FROM recolte WHERE ID_Maraicher = %s
+    """
+
+    mycursor.execute(check_sql, (id_maraicher,))    
+    existing_recolte = mycursor.fetchone()
+
+    if existing_recolte and existing_recolte['ID_recolte'] != id_recolte:
+        flash('Ce maraicher a déjà une récolte en cours', 'error')
+        return redirect('/recolte/edit?id=' + str(id_recolte))
+
+    check_sql = """
+        SELECT * FROM recolte WHERE ID_Produit = %s
+    """
+    mycursor.execute(check_sql, (id_produit,))
+    existing_recolte = mycursor.fetchone()
+
+    if existing_recolte and existing_recolte['ID_recolte'] != id_recolte:
+        flash('Ce produit a déjà une récolte en cours', 'error')
+        return redirect('/recolte/edit?id=' + str(id_recolte))
+
     
-    mycursor = get_db().cursor()
     sql = """
         UPDATE recolte 
         SET quantité = %s, Date_Debut = %s, ID_Produit = %s, ID_Maraicher = %s
