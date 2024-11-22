@@ -218,6 +218,14 @@ def edit_recolte_post():
     flash('Récolte mise à jour avec succès', 'success')
     return redirect('/recolte')
 
+@app.route('/recolte/delete', methods=['POST'])
+def delete_recolte():
+    id_recolte = request.form.get('ID_recolte', type=int)
+    mycursor = get_db().cursor()
+    mycursor.execute("DELETE FROM recolte WHERE ID_recolte = %s", (id_recolte,))
+    get_db().commit()
+    return redirect('/recolte')
+
 @app.route('/vente')
 def vente():
     return render_template('vente/show_vente.html')
