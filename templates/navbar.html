@@ -13,7 +13,7 @@
 
                 <div class="hidden md:ml-6 md:flex md:space-x-4 items-center">
                     <div class="relative group">
-                        <a href="{{ url_for('home') }}"
+                        <a href="/home"
                             class="px-3 py-2 rounded-md text-sm font-medium text-white hover:bg-green-500 hover:text-white transition-all duration-300 ease-in-out">
                             Accueil
                         </a>
@@ -26,9 +26,9 @@
                     </div>
 
                     <div class="relative group">
-                        <a href="{{ url_for('maraicher') }}"
+                        <a href="/recolte"
                             class="px-3 py-2 rounded-md text-sm font-medium text-white hover:bg-green-500 hover:text-white transition-all duration-300 ease-in-out">
-                            Maraîcher
+                            Récoltes
                         </a>
                         <div
                             class="absolute left-0 w-48 mt-2 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out">
@@ -39,9 +39,9 @@
                     </div>
 
                     <div class="relative group">
-                        <a href="{{ url_for('recolte') }}"
+                        <a href="/produit"
                             class="px-3 py-2 rounded-md text-sm font-medium text-white hover:bg-green-500 hover:text-white transition-all duration-300 ease-in-out">
-                            Récolte
+                            Produits
                         </a>
                         <div
                             class="absolute left-0 w-48 mt-2 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out">
@@ -52,9 +52,9 @@
                     </div>
 
                     <div class="relative group">
-                        <a href="{{ url_for('produit') }}"
+                        <a href="/marche"
                             class="px-3 py-2 rounded-md text-sm font-medium text-white hover:bg-green-500 hover:text-white transition-all duration-300 ease-in-out">
-                            Produits
+                            Marchés
                         </a>
                         <div
                             class="absolute left-0 w-48 mt-2 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out">
@@ -65,9 +65,9 @@
                     </div>
 
                     <div class="relative group">
-                        <a href="{{ url_for('marche') }}"
+                        <a href="/vente"
                             class="px-3 py-2 rounded-md text-sm font-medium text-white hover:bg-green-500 hover:text-white transition-all duration-300 ease-in-out">
-                            Marché
+                            Ventes
                         </a>
                         <div
                             class="absolute left-0 w-48 mt-2 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out">
@@ -96,25 +96,29 @@
 
     <div class="hidden mobile-menu md:hidden" id="mobile-menu">
         <div class="px-2 pt-2 pb-3 space-y-1 bg-green-600">
-            <a href="{{ url_for('home') }}"
+            <a href="/home"
                 class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-green-500 hover:text-white">
                 Accueil <span class="text-sm text-green-200">(SUCHET Constant)</span>
             </a>
-            <a href="{{ url_for('maraicher') }}"
+            <a href="/maraicher"
                 class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-green-500 hover:text-white">
                 Maraîcher <span class="text-sm text-green-200">(TAHAR AMINE TOUZI)</span>
             </a>
-            <a href="{{ url_for('recolte') }}"
+            <a href="/recolte"
                 class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-green-500 hover:text-white">
                 Récolte <span class="text-sm text-green-200">(SONNET NOE)</span>
             </a>
-            <a href="{{ url_for('produit') }}"
+            <a href="/produit"
                 class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-green-500 hover:text-white">
                 Produits <span class="text-sm text-green-200">(SPRINGER THEO)</span>
             </a>
-            <a href="{{ url_for('marche') }}"
+            <a href="/marche"
                 class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-green-500 hover:text-white">
                 Marché <span class="text-sm text-green-200">(SUCHET Constant)</span>
+            </a>
+            <a href="/vente"
+                class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-green-500 hover:text-white">
+                Vente <span class="text-sm text-green-200">(SPRINGER THEO)</span>
             </a>
         </div>
     </div>
