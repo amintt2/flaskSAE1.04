@@ -31,8 +31,7 @@
                            value="{{ recolte.Date_Debut }}"
                            class="form-input w-full px-4 py-3 rounded-lg border-2 border-gray-300 
                                   focus:border-green-500 focus:ring focus:ring-green-200 
-                                  transition duration-200 text-gray-800 text-lg
-                                  placeholder-gray-400 bg-white shadow-sm">
+                                  transition duration-200">
                 </div>
 
                 <!-- Produit -->
@@ -44,9 +43,14 @@
                                    transition duration-200 text-gray-800 text-lg
                                    placeholder-gray-400 bg-white shadow-sm">
                         {% for produit in produits %}
-                        <option value="{{ produit.ID_Produit }}" 
-                                {% if produit.ID_Produit == recolte.ID_Produit %}selected{% endif %}>
+                        <option value="{{ produit.ID_Produit }}"
+                                {% if produit.ID_Produit == recolte.ID_Produit %}selected
+                                {% elif produit.in_recolte == 1 %}disabled{% endif %}
+                                class="{% if produit.in_recolte == 1 and produit.ID_Produit != recolte.ID_Produit %}text-gray-400 bg-gray-100{% endif %}">
                             {{ produit.nom_produit }}
+                            {% if produit.in_recolte == 1 and produit.ID_Produit != recolte.ID_Produit %}
+                                (Déjà en récolte)
+                            {% endif %}
                         </option>
                         {% endfor %}
                     </select>
@@ -62,8 +66,13 @@
                                    placeholder-gray-400 bg-white shadow-sm">
                         {% for maraicher in maraichers %}
                         <option value="{{ maraicher.ID_Maraicher }}"
-                                {% if maraicher.ID_Maraicher == recolte.ID_Maraicher %}selected{% endif %}>
+                                {% if maraicher.ID_Maraicher == recolte.ID_Maraicher %}selected
+                                {% elif maraicher.in_recolte == 1 %}disabled{% endif %}
+                                class="{% if maraicher.in_recolte == 1 and maraicher.ID_Maraicher != recolte.ID_Maraicher %}text-gray-400 bg-gray-100{% endif %}">
                             {{ maraicher.Nom }} {{ maraicher.Prénom }}
+                            {% if maraicher.in_recolte == 1 and maraicher.ID_Maraicher != recolte.ID_Maraicher %}
+                                (Déjà en récolte)
+                            {% endif %}
                         </option>
                         {% endfor %}
                     </select>
@@ -85,7 +94,7 @@
                                    transition duration-200 ease-in-out
                                    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                         <i class="fas fa-save mr-2"></i>
-                        Enregistrer les modifications
+                        Enregistrer
                     </button>
                 </div>
             </form>

@@ -2,6 +2,7 @@
 # -*- coding:utf-8 -*-
 from flask import Flask, request, render_template, redirect, flash
 import time
+from datetime import date
 
 app = Flask(__name__)
 app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -15,8 +16,8 @@ def get_db():
     if 'db' not in g:
         g.db = pymysql.connect(
             host="localhost",
-            user="root",
-            password="0422",
+            user="constantsuchet",
+            password="Password123!",
             database="maraicher_db",        # nom de votre base de données
             charset='utf8mb4',
             cursorclass=pymysql.cursors.DictCursor
@@ -79,24 +80,66 @@ def home():
 @app.route('/recolte')
 def show_recoltes():
     mycursor = get_db().cursor()
-    sql = """
+    
+    # Requête principale pour les récoltes
+    sql_recoltes = """
         SELECT r.*, p.nom_produit, m.Nom, m.Prénom 
         FROM recolte r
         JOIN Produit p ON r.ID_Produit = p.ID_Produit
         JOIN Maraicher m ON r.ID_Maraicher = m.ID_Maraicher
     """
-    mycursor.execute(sql)
+    
+    # Requête pour les statistiques par produit
+    sql_stats = """
+        SELECT 
+            p.nom_produit,
+            COUNT(*) as nombre_recoltes,
+            SUM(r.quantité) as quantite_totale,
+            AVG(r.quantité) as moyenne_quantite
+        FROM recolte r
+        JOIN Produit p ON r.ID_Produit = p.ID_Produit
+        GROUP BY p.ID_Produit, p.nom_produit
+    """
+    
+    mycursor.execute(sql_recoltes)
     recoltes = mycursor.fetchall()
-    return render_template('recolte/show_recolte.html', recoltes=recoltes)
+    
+    mycursor.execute(sql_stats)
+    stats = mycursor.fetchall()
+    
+    return render_template('recolte/show_recolte.html', 
+                         recoltes=recoltes,
+                         stats=stats)
 
 @app.route('/recolte/add', methods=['GET'])
 def add_recolte_get():
     mycursor = get_db().cursor()
-    mycursor.execute("SELECT * FROM Produit")
+    
+    # Get all products and check which ones are in récolte
+    sql_produits = """
+        SELECT p.*, 
+               CASE WHEN r.ID_Produit IS NOT NULL THEN 1 ELSE 0 END as in_recolte
+        FROM Produit p
+        LEFT JOIN recolte r ON p.ID_Produit = r.ID_Produit
+    """
+    mycursor.execute(sql_produits)
     produits = mycursor.fetchall()
-    mycursor.execute("SELECT * FROM Maraicher")
+    
+    # Get all maraichers and check which ones are in récolte
+    sql_maraichers = """
+        SELECT m.*, 
+               CASE WHEN r.ID_Maraicher IS NOT NULL THEN 1 ELSE 0 END as in_recolte
+        FROM Maraicher m
+        LEFT JOIN recolte r ON m.ID_Maraicher = r.ID_Maraicher
+    """
+    mycursor.execute(sql_maraichers)
     maraichers = mycursor.fetchall()
-    return render_template('recolte/add_recolte.html', produits=produits, maraichers=maraichers)
+    
+    today_date = date.today().strftime('%Y-%m-%d')
+    return render_template('recolte/add_recolte.html', 
+                         produits=produits, 
+                         maraichers=maraichers,
+                         today_date=today_date)
 
 @app.route('/recolte/add', methods=['POST'])
 def add_recolte_post():
@@ -141,7 +184,6 @@ def add_recolte_post():
 
 @app.route('/recolte/edit', methods=['GET'])
 def edit_recolte():
-    # Get the ID from query parameters
     id_recolte = request.args.get('id', type=int)
     
     if not id_recolte:
@@ -149,7 +191,8 @@ def edit_recolte():
         return redirect('/recolte')
     
     mycursor = get_db().cursor()
-    # Join with produit and maraicher tables to get all necessary information
+    
+    # Get current récolte info
     sql = """
         SELECT r.*, p.nom_produit, m.Nom, m.Prénom 
         FROM recolte r 
@@ -164,11 +207,24 @@ def edit_recolte():
         flash('Récolte non trouvée', 'error')
         return redirect('/recolte')
     
-    # Get list of products and maraichers for the form
-    mycursor.execute("SELECT * FROM produit")
+    # Get products with in_recolte status, excluding current récolte
+    sql_produits = """
+        SELECT p.*, 
+               CASE WHEN (r.ID_Produit IS NOT NULL AND r.ID_recolte != %s) THEN 1 ELSE 0 END as in_recolte
+        FROM Produit p
+        LEFT JOIN recolte r ON p.ID_Produit = r.ID_Produit
+    """
+    mycursor.execute(sql_produits, (id_recolte,))
     produits = mycursor.fetchall()
     
-    mycursor.execute("SELECT * FROM maraicher")
+    # Get maraichers with in_recolte status, excluding current récolte
+    sql_maraichers = """
+        SELECT m.*, 
+               CASE WHEN (r.ID_Maraicher IS NOT NULL AND r.ID_recolte != %s) THEN 1 ELSE 0 END as in_recolte
+        FROM Maraicher m
+        LEFT JOIN recolte r ON m.ID_Maraicher = r.ID_Maraicher
+    """
+    mycursor.execute(sql_maraichers, (id_recolte,))
     maraichers = mycursor.fetchall()
     
     return render_template('recolte/edit_recolte.html', 

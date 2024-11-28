@@ -36,10 +36,27 @@
                             </div>
                             <div class="ml-4">
                                 <div class="text-sm font-medium text-gray-900">{{ recolte.nom_produit }}</div>
+                                <div class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                                    ID: {{ recolte.ID_Produit }}
+                                </div>
                             </div>
                         </div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ recolte.Nom }} {{ recolte.Prénom }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 h-10 w-10 relative">
+                                <i class="fas fa-user-tie text-2xl text-green-600"></i>
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">{{ recolte.Nom }} {{ recolte.Prénom }}</div>
+                                <div class="inline-block">
+                                    <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full whitespace-nowrap">
+                                        ID: {{ recolte.ID_Maraicher }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div class="flex gap-3">
                             <a href="/recolte/edit?id={{ recolte.ID_recolte }}" 

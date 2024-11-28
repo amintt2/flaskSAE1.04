@@ -1,10 +1,57 @@
 {% extends "base.html" %}
-{% from 'accueil.html' import creator_sections %}
-
-{% block title %}Accueil - Maraîcher{% endblock %}
 
 {% block content %}
-<div class="container">
-    {{ creator_sections(creators) }}
+<div class="container mx-auto px-4 py-8">
+    <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-green-800 mb-4">SAE 1.04 - Base de données</h1>
+        <div class="text-lg text-gray-600 mb-4">
+            <p>Groupe SAE : 23</p>
+            <p>Groupe TP : S1C2</p>
+        </div>
+        <div class="text-md text-gray-500 mb-8">
+            <p>SUCHET Constant, TOUZI Tahar Amine, SONET Noe, SPRINGER Theo</p>
+        </div>
+
+        <!-- Boutons de navigation -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
+            <div class="flex flex-col items-center">
+                <p class="font-semibold mb-2">SUCHET Constant</p>
+                <a href="/recolte" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 flex items-center">
+                    <i class="fas fa-leaf mr-2"></i>
+                    Page Récolte
+                </a>
+            </div>
+
+            <div class="flex flex-col items-center">
+                <p class="font-semibold mb-2">TOUZI Tahar Amine</p>
+                <a href="/produit" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 flex items-center">
+                    <i class="fas fa-apple-alt mr-2"></i>
+                    Page Produit
+                </a>
+            </div>
+
+            <div class="flex flex-col items-center">
+                <p class="font-semibold mb-2">SONET Noe</p>
+                <a href="/marche" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 flex items-center">
+                    <i class="fas fa-shopping-basket mr-2"></i>
+                    Page Marché
+                </a>
+            </div>
+
+            <div class="flex flex-col items-center">
+                <p class="font-semibold mb-2">SPRINGER Theo</p>
+                <a href="/vente" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 flex items-center">
+                    <i class="fas fa-shopping-cart mr-2"></i>
+                    Page Vente
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {% for creator in creators %}
+            <!-- Rest of your existing creator cards -->
+        {% endfor %}
+    </div>
 </div>
 {% endblock %}
