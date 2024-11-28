@@ -69,14 +69,14 @@ Ce tutoriel vous guidera pas à pas pour le setup et l'explication du projet de 
 * Cette requête traite le formulaire d'édition d'une récolte existante.
 * Elle met à jour les détails de la récolte dans la base de données si tout est valide.
 
-## Ajout d'une nouvelle catégorie comme la vente ou le marché
+## Création d'une nouvelle catégorie basée sur la récolte avec une nouvelle clé étrangère et une table déjà définie dans le projet SQL
 
-Pour ajouter une nouvelle catégorie comme la vente ou le marché, vous devrez suivre les étapes suivantes :
+Pour créer une nouvelle catégorie basée sur la récolte, mais avec une nouvelle clé étrangère et une table déjà définie dans le projet SQL, vous devrez suivre les étapes suivantes :
 
-1. Créez une nouvelle table dans votre base de données pour stocker les informations de la nouvelle catégorie.
-2. Ajoutez des routes HTTP GET et POST dans le fichier `app.py` pour gérer les demandes liées à la nouvelle catégorie.
-3. Créez des modèles pour la nouvelle catégorie dans le fichier `app.py` pour interagir avec la base de données.
-4. Créez des vues HTML pour afficher les informations de la nouvelle catégorie.
-5. Mettez à jour les routes et les modèles existants pour intégrer la nouvelle catégorie dans le système.
+1. Utilisez la table `Vente` déjà définie dans le projet SQL pour stocker les informations de la nouvelle catégorie.
+2. Ajoutez des routes HTTP GET et POST dans le fichier `app.py` pour gérer les demandes liées à la nouvelle catégorie de vente. Par exemple, `/vente` pour afficher la liste des ventes et `/vente/add` pour ajouter une nouvelle vente.
+3. Créez des modèles pour la nouvelle catégorie de vente dans le fichier `app.py` pour interagir avec la base de données. Vous pouvez utiliser les mêmes principes que pour la gestion des récoltes, mais en adaptant les modèles pour correspondre à la structure de la table `Vente`.
+4. Créez des vues HTML pour afficher les informations de la nouvelle catégorie de vente. Vous pouvez créer un fichier `vente.html` pour afficher la liste des ventes et un fichier `add_vente.html` pour le formulaire d'ajout d'une nouvelle vente.
+5. Mettez à jour les routes et les modèles existants pour intégrer la nouvelle catégorie de vente dans le système. Par exemple, vous pouvez ajouter des liens vers les pages de vente dans le menu de navigation ou ajouter des fonctionnalités pour afficher les ventes associées à une récolte spécifique.
 
-En suivant ces étapes, vous pourrez facilement ajouter de nouvelles fonctionnalités au projet pour gérer d'autres aspects de votre système de gestion de récoltes.
+En suivant ces étapes, vous pourrez facilement ajouter de nouvelles fonctionnalités au projet pour gérer les ventes, tout en utilisant les structures de données déjà définies dans le projet SQL.
