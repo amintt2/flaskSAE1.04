@@ -17,8 +17,24 @@ Ce tutoriel vous guidera pas à pas pour le setup et l'explication du projet de 
 
 ### Configuration de la base de données
 
-* Créez une base de données MySQL avec un nom de votre choix (par exemple, `maraicher_db`).
-* Créez un utilisateur MySQL avec un nom et un mot de passe de votre choix (par exemple, `constantsuchet` et `Password123!`).
+* **Si vous n'avez pas encore créé la base de données et l'utilisateur MySQL, suivez ces étapes :**
+
+  1. **Créez une base de données MySQL :**
+     ```sql
+     CREATE DATABASE maraicher_db;
+     ```
+
+  2. **Créez un utilisateur MySQL :**
+     ```sql
+     CREATE USER 'constantsuchet'@'localhost' IDENTIFIED BY 'Password123!';
+     ```
+
+  3. **Accordez les privilèges à l'utilisateur sur la base de données :**
+     ```sql
+     GRANT ALL PRIVILEGES ON maraicher_db.* TO 'constantsuchet'@'localhost';
+     FLUSH PRIVILEGES;
+     ```
+
 * Modifiez les informations de connexion à la base de données dans le fichier `app.py` pour correspondre à vos paramètres de base de données.
 
 ### Lancement du projet
