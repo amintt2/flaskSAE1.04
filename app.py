@@ -83,22 +83,22 @@ def show_recoltes():
     
     # Requête principale pour les récoltes
     sql_recoltes = """
-        SELECT r.*, p.nom_produit, m.Nom, m.Prénom 
-        FROM recolte r
-        JOIN Produit p ON r.ID_Produit = p.ID_Produit
-        JOIN Maraicher m ON r.ID_Maraicher = m.ID_Maraicher
+        SELECT recolte.*, Produit.nom_produit, Maraicher.Nom, Maraicher.Prénom 
+        FROM recolte
+        JOIN Produit ON recolte.ID_Produit = Produit.ID_Produit
+        JOIN Maraicher ON recolte.ID_Maraicher = Maraicher.ID_Maraicher
     """
     
     # Requête pour les statistiques par produit
     sql_stats = """
         SELECT 
-            p.nom_produit,
+            Produit.nom_produit,
             COUNT(*) as nombre_recoltes,
-            SUM(r.quantité) as quantite_totale,
-            AVG(r.quantité) as moyenne_quantite
-        FROM recolte r
-        JOIN Produit p ON r.ID_Produit = p.ID_Produit
-        GROUP BY p.ID_Produit, p.nom_produit
+            SUM(recolte.quantité) as quantite_totale,
+            AVG(recolte.quantité) as moyenne_quantite
+        FROM recolte
+        JOIN Produit ON recolte.ID_Produit = Produit.ID_Produit
+        GROUP BY Produit.ID_Produit, Produit.nom_produit
     """
     
     mycursor.execute(sql_recoltes)
@@ -117,20 +117,20 @@ def add_recolte_get():
     
     # Get all products and check which ones are in récolte
     sql_produits = """
-        SELECT p.*, 
-               CASE WHEN r.ID_Produit IS NOT NULL THEN 1 ELSE 0 END as in_recolte
-        FROM Produit p
-        LEFT JOIN recolte r ON p.ID_Produit = r.ID_Produit
+        SELECT Produit.*, 
+               CASE WHEN recolte.ID_Produit IS NOT NULL THEN 1 ELSE 0 END as in_recolte
+        FROM Produit
+        LEFT JOIN recolte ON Produit.ID_Produit = recolte.ID_Produit
     """
     mycursor.execute(sql_produits)
     produits = mycursor.fetchall()
     
     # Get all maraichers and check which ones are in récolte
     sql_maraichers = """
-        SELECT m.*, 
-               CASE WHEN r.ID_Maraicher IS NOT NULL THEN 1 ELSE 0 END as in_recolte
-        FROM Maraicher m
-        LEFT JOIN recolte r ON m.ID_Maraicher = r.ID_Maraicher
+        SELECT Maraicher.*, 
+               CASE WHEN recolte.ID_Maraicher IS NOT NULL THEN 1 ELSE 0 END as in_recolte
+        FROM Maraicher
+        LEFT JOIN recolte ON Maraicher.ID_Maraicher = recolte.ID_Maraicher
     """
     mycursor.execute(sql_maraichers)
     maraichers = mycursor.fetchall()
@@ -194,11 +194,11 @@ def edit_recolte():
     
     # Get current récolte info
     sql = """
-        SELECT r.*, p.nom_produit, m.Nom, m.Prénom 
-        FROM recolte r 
-        JOIN produit p ON r.ID_produit = p.ID_produit 
-        JOIN maraicher m ON r.ID_maraicher = m.ID_maraicher 
-        WHERE r.ID_recolte = %s
+        SELECT recolte.*, Produit.nom_produit, Maraicher.Nom, Maraicher.Prénom 
+        FROM recolte 
+        JOIN Produit ON recolte.ID_produit = Produit.ID_produit 
+        JOIN Maraicher ON recolte.ID_maraicher = Maraicher.ID_maraicher 
+        WHERE recolte.ID_recolte = %s
     """
     mycursor.execute(sql, (id_recolte,))
     recolte = mycursor.fetchone()
@@ -209,20 +209,20 @@ def edit_recolte():
     
     # Get products with in_recolte status, excluding current récolte
     sql_produits = """
-        SELECT p.*, 
-               CASE WHEN (r.ID_Produit IS NOT NULL AND r.ID_recolte != %s) THEN 1 ELSE 0 END as in_recolte
-        FROM Produit p
-        LEFT JOIN recolte r ON p.ID_Produit = r.ID_Produit
+        SELECT Produit.*, 
+               CASE WHEN (recolte.ID_Produit IS NOT NULL AND recolte.ID_recolte != %s) THEN 1 ELSE 0 END as in_recolte
+        FROM Produit
+        LEFT JOIN recolte ON Produit.ID_Produit = recolte.ID_Produit
     """
     mycursor.execute(sql_produits, (id_recolte,))
     produits = mycursor.fetchall()
     
     # Get maraichers with in_recolte status, excluding current récolte
     sql_maraichers = """
-        SELECT m.*, 
-               CASE WHEN (r.ID_Maraicher IS NOT NULL AND r.ID_recolte != %s) THEN 1 ELSE 0 END as in_recolte
-        FROM Maraicher m
-        LEFT JOIN recolte r ON m.ID_Maraicher = r.ID_Maraicher
+        SELECT Maraicher.*, 
+               CASE WHEN (recolte.ID_Maraicher IS NOT NULL AND recolte.ID_recolte != %s) THEN 1 ELSE 0 END as in_recolte
+        FROM Maraicher
+        LEFT JOIN recolte ON Maraicher.ID_Maraicher = recolte.ID_Maraicher
     """
     mycursor.execute(sql_maraichers, (id_recolte,))
     maraichers = mycursor.fetchall()
@@ -287,11 +287,11 @@ def show_recolte_conflicts(recolte_id):
     mycursor = get_db().cursor()
     
     sql = """
-        SELECT r.*, p.nom_produit, m.Nom, m.Prénom 
-        FROM recolte r
-        LEFT JOIN Produit p ON r.ID_Produit = p.ID_Produit
-        LEFT JOIN Maraicher m ON r.ID_Maraicher = m.ID_Maraicher
-        WHERE r.ID_recolte = %s
+        SELECT recolte.*, Produit.nom_produit, Maraicher.Nom, Maraicher.Prénom 
+        FROM recolte
+        LEFT JOIN Produit ON recolte.ID_Produit = Produit.ID_Produit
+        LEFT JOIN Maraicher ON recolte.ID_Maraicher = Maraicher.ID_Maraicher
+        WHERE recolte.ID_recolte = %s
     """
     mycursor.execute(sql, (recolte_id,))
     recolte = mycursor.fetchone()
