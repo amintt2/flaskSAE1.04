@@ -1,19 +1,11 @@
 CREATE DATABASE IF NOT EXISTS maraicher_db;
 USE maraicher_db;
 
--- Drop tables in reverse dependency order
-DROP TABLE IF EXISTS est_de_saison;
-DROP TABLE IF EXISTS recolte_ce_type;
-DROP TABLE IF EXISTS est_dans;
-DROP TABLE IF EXISTS est_vendu;
-DROP TABLE IF EXISTS recolte;
-DROP TABLE IF EXISTS Vente;
-DROP TABLE IF EXISTS Produit;
-DROP TABLE IF EXISTS Marché;
-DROP TABLE IF EXISTS LieuMarché;
-DROP TABLE IF EXISTS Saison;
-DROP TABLE IF EXISTS TypeProduit;
-DROP TABLE IF EXISTS Maraicher;
+DROP DATABASE IF EXISTS maraicher_db;
+
+CREATE DATABASE IF NOT EXISTS maraicher_db;
+
+USE maraicher_db;
 
 -- Create tables in correct dependency order
 CREATE TABLE Maraicher(
@@ -39,26 +31,26 @@ CREATE TABLE Saison(
    PRIMARY KEY(code_saison)
 );
 
-CREATE TABLE LieuMarché(
+CREATE TABLE LieuMarche(
    code_lieu INT AUTO_INCREMENT,
    nom VARCHAR(50),
    PRIMARY KEY(code_lieu)
 );
 
-CREATE TABLE Marché( -- enlever les accents
+CREATE TABLE Marche( -- enlever les accents
    ID_Marché INT,
    nom_maché VARCHAR(50),
    date_march DATE,
-   -- nombre de standes a ajouter
+   nombre_standes INT,
    code_lieu INT NOT NULL,
    PRIMARY KEY(ID_Marché),
-   FOREIGN KEY(code_lieu) REFERENCES LieuMarché(code_lieu)
+   FOREIGN KEY(code_lieu) REFERENCES LieuMarche(code_lieu)
 );
 
 CREATE TABLE Produit(
    ID_Produit INT AUTO_INCREMENT,
    nom_produit VARCHAR(50),
-   -- rajouter prix de vente
+   prix_vente INT,
    idTypeproduit INT NOT NULL,
    PRIMARY KEY(ID_Produit),
    FOREIGN KEY(idTypeproduit) REFERENCES TypeProduit(idTypeproduit)
@@ -69,9 +61,9 @@ CREATE TABLE Vente(
    Date_Vente DATE,
    ID_Marché INT NOT NULL,
    ID_Maraicher INT NOT NULL,
-   -- Prix emplacement a ajouter
+   prix_emplacement INT,
    PRIMARY KEY(ID_Vente),
-   FOREIGN KEY(ID_Marché) REFERENCES Marché(ID_Marché),
+   FOREIGN KEY(ID_Marché) REFERENCES Marche(ID_Marché),
    FOREIGN KEY(ID_Maraicher) REFERENCES Maraicher(ID_Maraicher)
 );
 
@@ -89,12 +81,12 @@ CREATE TABLE recolte(
 );
 
 CREATE TABLE est_vendu( -- changer nom
-   -- id vendu
+   ID_Est_Vendu INT AUTO_INCREMENT,
    quantité INT,
    prix INT,
    ID_Vente INT NOT NULL,
    ID_Produit INT NOT NULL,
-   PRIMARY KEY(ID_Vente),
+   PRIMARY KEY(ID_Est_Vendu),
    FOREIGN KEY(ID_Vente) REFERENCES Vente(ID_Vente),
    FOREIGN KEY(ID_Produit) REFERENCES Produit(ID_Produit)
 );
@@ -104,7 +96,7 @@ CREATE TABLE est_dans(
    ID_Marché INT,
    PRIMARY KEY(ID_Maraicher, ID_Marché),
    FOREIGN KEY(ID_Maraicher) REFERENCES Maraicher(ID_Maraicher),
-   FOREIGN KEY(ID_Marché) REFERENCES Marché(ID_Marché)
+   FOREIGN KEY(ID_Marché) REFERENCES Marche(ID_Marché)
 );
 
 CREATE TABLE recolte_ce_type(
@@ -141,14 +133,14 @@ INSERT INTO Saison (Date_saison, libelle_saison) VALUES
 ('2024-09-22', 'Automne'),
 ('2024-12-21', 'Hiver');
 
-INSERT INTO LieuMarché (nom) VALUES
+INSERT INTO LieuMarche (nom) VALUES
 ('Place Centrale'),
 ('Marché Couvert'),
 ('Place de la Mairie'),
 ('Halle aux Légumes');
 
 -- Tables with single dependencies
-INSERT INTO Marché (ID_Marché, nom_maché, date_march, code_lieu) VALUES
+INSERT INTO Marche (ID_Marché, nom_maché, date_march, code_lieu) VALUES
 (1, 'Marché Bio', '2024-04-01', 1),
 (2, 'Marché des Producteurs', '2024-04-02', 2),
 (3, 'Marché Local', '2024-04-03', 3);
@@ -171,10 +163,10 @@ INSERT INTO recolte (quantité, Date_Debut, ID_Produit, ID_Maraicher) VALUES
 (150, '2024-03-16', 2, 2),
 (200, '2024-03-17', 3, 3);
 
-INSERT INTO est_vendu (quantité, prix, ID_Vente, ID_Produit) VALUES
-(50, 200, 1, 1),
-(75, 150, 2, 2),
-(100, 300, 3, 3);
+INSERT INTO est_vendu (ID_Est_Vendu, quantité, prix, ID_Vente, ID_Produit) VALUES
+(1, 50, 200, 1, 1),
+(2, 75, 150, 2, 2),
+(3, 100, 300, 3, 3);
 
 INSERT INTO est_dans (ID_Maraicher, ID_Marché) VALUES
 (1, 1),
