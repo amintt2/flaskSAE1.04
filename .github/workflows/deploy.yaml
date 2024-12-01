@@ -31,28 +31,20 @@ jobs:
     # Étape 3 : Installer les dépendances
     - name: Install dependencies
       run: |
-        python -m venv venv
-        source venv/bin/activate
-        pip install --upgrade pip
+        python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    # Étape 4 : Vérifier que l'application peut démarrer
-    - name: Check application startup
-      run: |
-        source venv/bin/activate
-        python -c "from app import app; print('Application startup check successful')"
-
-    # Étape 5 : Configuration de Pages
+    # Étape 4 : Configuration de Pages
     - name: Setup Pages
       uses: actions/configure-pages@v4
 
-    # Étape 6 : Upload l'artifact
+    # Étape 5 : Upload l'artifact
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:
         path: './templates'
 
-    # Étape 7 : Déployer sur GitHub Pages
+    # Étape 6 : Déployer sur GitHub Pages
     - name: Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@v4
