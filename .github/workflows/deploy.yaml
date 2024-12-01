@@ -18,9 +18,9 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.10' # Remplacez par la version Python utilisée
+        python-version: '3.10' # Remplacez par votre version Python
 
-    # Étape 3 : Préparer l'environnement virtuel et installer les dépendances
+    # Étape 3 : Installer les dépendances
     - name: Install dependencies
       run: |
         python -m venv venv
