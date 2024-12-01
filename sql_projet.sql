@@ -45,10 +45,11 @@ CREATE TABLE LieuMarché(
    PRIMARY KEY(code_lieu)
 );
 
-CREATE TABLE Marché(
+CREATE TABLE Marché( -- enlever les accents
    ID_Marché INT,
    nom_maché VARCHAR(50),
    date_march DATE,
+   -- nombre de standes a ajouter
    code_lieu INT NOT NULL,
    PRIMARY KEY(ID_Marché),
    FOREIGN KEY(code_lieu) REFERENCES LieuMarché(code_lieu)
@@ -57,6 +58,7 @@ CREATE TABLE Marché(
 CREATE TABLE Produit(
    ID_Produit INT AUTO_INCREMENT,
    nom_produit VARCHAR(50),
+   -- rajouter prix de vente
    idTypeproduit INT NOT NULL,
    PRIMARY KEY(ID_Produit),
    FOREIGN KEY(idTypeproduit) REFERENCES TypeProduit(idTypeproduit)
@@ -67,6 +69,7 @@ CREATE TABLE Vente(
    Date_Vente DATE,
    ID_Marché INT NOT NULL,
    ID_Maraicher INT NOT NULL,
+   -- Prix emplacement a ajouter
    PRIMARY KEY(ID_Vente),
    FOREIGN KEY(ID_Marché) REFERENCES Marché(ID_Marché),
    FOREIGN KEY(ID_Maraicher) REFERENCES Maraicher(ID_Maraicher)
@@ -85,12 +88,13 @@ CREATE TABLE recolte(
    FOREIGN KEY(ID_Maraicher) REFERENCES Maraicher(ID_Maraicher)
 );
 
-CREATE TABLE est_vendu(
+CREATE TABLE est_vendu( -- changer nom
+   -- id vendu
    quantité INT,
    prix INT,
    ID_Vente INT NOT NULL,
    ID_Produit INT NOT NULL,
-   PRIMARY KEY(quantité),
+   PRIMARY KEY(ID_Vente),
    FOREIGN KEY(ID_Vente) REFERENCES Vente(ID_Vente),
    FOREIGN KEY(ID_Produit) REFERENCES Produit(ID_Produit)
 );

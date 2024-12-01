@@ -69,7 +69,7 @@ Ce tutoriel vous guidera pas à pas pour le setup et l'explication du projet de 
 * Cette requête traite le formulaire d'édition d'une récolte existante.
 * Elle met à jour les détails de la récolte dans la base de données si tout est valide.
 
-## Création d'une nouvelle catégorie basée sur la récolte avec une nouvelle clé étrangère et une table déjà définie dans le projet SQL
+## Création d'une nouvelle catégorie basée sur la récolte avec une nouvelle clé étrangère et une table déjà définie dans le projet SQLx
 
 Pour créer une nouvelle catégorie basée sur la récolte, mais avec une nouvelle clé étrangère et une table déjà définie dans le projet SQL, vous devrez suivre les étapes suivantes :
 
