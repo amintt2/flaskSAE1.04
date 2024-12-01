@@ -18,29 +18,18 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.10' # Remplacez par la version Python que vous utilisez
+        python-version: '3.10' # Remplacez par la version Python utilisée
 
-    # Étape 3 : Préparer l'environnement virtuel
-    - name: Set up virtual environment
+    # Étape 3 : Préparer l'environnement virtuel et installer les dépendances
+    - name: Install dependencies
       run: |
         python -m venv venv
         source venv/bin/activate
         pip install --upgrade pip
+        pip install -r requirements.txt
 
-    # Étape 4 : Rendre Launcher.sh exécutable et l'exécuter
-    - name: Run Launcher script
-      run: |
-        chmod +x Launcher.sh
-        ./Launcher.sh
-
-    # Étape 5 : Tests (optionnel, en cas de tests intégrés)
+    # Étape 4 : Lancer les tests avec pytest
     - name: Run tests
       run: |
         source venv/bin/activate
         pytest
-
-    # Étape 6 : Déploiement (si nécessaire)
-    - name: Deploy to production
-      if: ${{ success() }}
-      run: |
-        echo "Déploiement réussi !" # Remplacez par les étapes de déploiement réel
