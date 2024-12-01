@@ -1,0 +1,49 @@
+{% macro creator_sections(creators) %}
+{% for creator in creators %}
+<div class="creator-section">
+    <div class="profile-card">
+        <div class="profile-header">
+            <div class="profile-image">
+                {% for page_name, page_url in creator.created_pages.items() %}
+                {% if page_name == "Maraîcher" %}
+                <i class="fas fa-leaf profile-icon"></i>
+                {% elif page_name == "Récolte" %}
+                <i class="fas fa-carrot profile-icon"></i>
+                {% elif page_name == "Produit" %}
+                <i class="fas fa-apple-alt profile-icon"></i>
+                {% elif page_name == "Marché" %}
+                <i class="fas fa-shopping-basket profile-icon"></i>
+                {% endif %}
+                {% endfor %}
+            </div>
+            <div class="profile-info">
+                <h1>{{ creator.name }}</h1>
+                <p class="title">{{ creator.title }}</p>
+            </div>
+        </div>
+        <div class="profile-content">
+            <p>{{ creator.description }}</p>
+        </div>
+        <div class="profile-footer">
+            <a href="{{ creator.profile_url }}" class="btn-primary">
+                {% for page_name, page_url in creator.created_pages.items() %}
+                {% if page_name == "Recolte" %}
+                <i class="fas fa-leaf"></i>
+                <span>Visiter la page Récolte</span>
+                {% elif page_name == "Vente" %}
+                <i class="fas fa-shopping-cart"></i>
+                <span>Visiter la page Vente</span>
+                {% elif page_name == "Produit" %}
+                <i class="fas fa-apple-alt"></i>
+                <span>Visiter la page Produit</span>
+                {% elif page_name == "Marché" %}
+                <i class="fas fa-shopping-basket"></i>
+                <span>Visiter la page Marché</span>
+                {% endif %}
+                {% endfor %}
+            </a>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endmacro %}

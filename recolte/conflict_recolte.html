@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Conflits de Suppression - Récolte{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-red-600 mb-2">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    Conflits de Suppression
+                </h1>
+                <p class="text-gray-600">
+                    La récolte que vous souhaitez supprimer est liée à d'autres éléments dans la base de données.
+                    Vous devez d'abord résoudre ces conflits avant de pouvoir la supprimer.
+                </p>
+            </div>
+
+            {% if conflicts %}
+            <div class="space-y-6">
+                {% if conflicts.produit %}
+                <div class="border-l-4 border-yellow-500 bg-yellow-50 p-4 rounded">
+                    <h2 class="text-xl font-semibold text-yellow-800 mb-3">
+                        <i class="fas fa-carrot mr-2"></i>
+                        Produit associé
+                    </h2>
+                    <div class="pl-4">
+                        <p class="text-yellow-700">Cette récolte est liée au produit suivant :</p>
+                        <ul class="list-disc list-inside mt-2 text-yellow-600">
+                            <li>{{ conflicts.produit.nom_produit }} (ID: {{ conflicts.produit.ID_Produit }})</li>
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if conflicts.maraicher %}
+                <div class="border-l-4 border-blue-500 bg-blue-50 p-4 rounded">
+                    <h2 class="text-xl font-semibold text-blue-800 mb-3">
+                        <i class="fas fa-user-farmer mr-2"></i>
+                        Maraîcher associé
+                    </h2>
+                    <div class="pl-4">
+                        <p class="text-blue-700">Cette récolte est liée au maraîcher suivant :</p>
+                        <ul class="list-disc list-inside mt-2 text-blue-600">
+                            <li>{{ conflicts.maraicher.Nom }} {{ conflicts.maraicher.Prénom }} (ID: {{ conflicts.maraicher.ID_Maraicher }})</li>
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="mt-8 space-y-4">
+                <p class="text-gray-700">Pour supprimer cette récolte, vous devez d'abord :</p>
+                <ul class="list-disc list-inside text-gray-600 ml-4">
+                    <li>Dissocier le produit de la récolte</li>
+                    <li>Dissocier le maraîcher de la récolte</li>
+                </ul>
+            </div>
+
+            <div class="mt-8 flex justify-end space-x-4">
+                <a href="/recolte" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors duration-200">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Retour
+                </a>
+                <form action="/recolte/delete" method="POST" class="inline">
+                    <input type="hidden" name="ID_recolte" value="{{ recolte_id }}">
+                    <button type="submit" 
+                            class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors duration-200">
+                        <i class="fas fa-trash mr-2"></i>
+                        Forcer la suppression
+                    </button>
+                </form>
+            </div>
+            {% else %}
+            <div class="text-center py-8">
+                <p class="text-gray-600">Aucun conflit trouvé. Vous pouvez supprimer cette récolte.</p>
+                <div class="mt-6">
+                    <a href="/recolte" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors duration-200">
+                        <i class="fas fa-check mr-2"></i>
+                        Retourner à la liste
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

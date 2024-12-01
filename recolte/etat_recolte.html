@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}État des Récoltes - MiamsBio{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6 text-green-800">État des Récoltes</h1>
+
+    <style>
+        /* Pour faire tourner la fleche des sections quand on clique */
+        details>summary {
+            list-style: none;
+        }
+
+        details>summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .chevron {
+            transition: transform 0.3s ease;
+        }
+
+        details[open] .chevron {
+            transform: rotate(180deg);
+        }
+    </style>
+
+    <form method="POST" class="mb-6 bg-white p-6 rounded-lg shadow-md">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label for="start_date" class="block text-sm font-medium text-gray-700">Date de début:</label>
+                <input type="date" id="start_date" name="start_date" required
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500">
+            </div>
+            <div>
+                <label for="end_date" class="block text-sm font-medium text-gray-700">Date de fin:</label>
+                <input type="date" id="end_date" name="end_date" required
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500">
+            </div>
+        </div>
+        <button type="submit"
+            class="mt-4 w-full bg-green-600 text-white font-semibold py-2 rounded-md hover:bg-green-700 transition duration-200">
+            <i class="fas fa-search mr-2"></i>Afficher
+        </button>
+    </form>
+
+    {% if results %}
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="p-4 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800">
+                Résultats du {{ start_date }} au {{ end_date }}
+            </h2>
+        </div>
+
+        {% set current_maraicher = namespace(name='', total_quantite=0, total_prix=0) %}
+        {% set previous_results = [] %}
+
+        {% for row in results %}
+        {% if current_maraicher.name != row.Nom + row.Prenom %}
+        {% if not loop.first %}
+        </tbody>
+        </table>
+    </div>
+    </details>
+    {% endif %}
+
+    {% set maraicher_quantite = results|selectattr("Nom", "equalto", row.Nom)|selectattr("Prenom", "equalto",
+    row.Prenom)|sum(attribute="quantite") %}
+    {% set maraicher_prix = results|selectattr("Nom", "equalto", row.Nom)|selectattr("Prenom", "equalto",
+    row.Prenom)|sum(attribute="prix_total") %}
+
+    <details class="mb-4 bg-white rounded-lg shadow group">
+        <summary
+            class="cursor-pointer p-4 bg-gray-100 hover:bg-gray-200 transition-colors duration-200 rounded-t-lg border border-gray-300">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <i class="fas fa-user-tie text-2xl text-green-600 mr-4"></i>
+                    <span class="text-xl font-bold text-gray-800">{{ row.Nom }} {{ row.Prenom }}</span>
+                </div>
+                <div class="flex items-center space-x-8">
+                    <div class="text-gray-600">
+                        <i class="fas fa-weight-hanging mr-2"></i>
+                        <span class="font-semibold">{{ maraicher_quantite }}</span> kg
+                    </div>
+                    <div class="text-gray-600">
+                        <i class="fas fa-euro-sign mr-2"></i>
+                        <span class="font-semibold">{{ maraicher_prix }}</span> €
+                    </div>
+                    <div class="text-gray-400">
+                        <i class="fas fa-chevron-down text-xl chevron"></i>
+                    </div>
+                </div>
+            </div>
+        </summary>
+
+        <div class="border border-t-0 border-gray-300 rounded-b-lg">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Produit</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Valeur Unitaire</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Quantité (kg)</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Valeur Totale</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% endif %}
+
+                    <tr class="hover:bg-gray-50 transition-colors duration-200">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <i class="fas fa-box text-xl text-orange-600 mr-3"></i>
+                                <span class="text-sm font-medium text-gray-900">{{ row.nom_produit }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <i class="fas fa-tag text-xl text-blue-600 mr-3"></i>
+                                <span class="text-sm font-medium text-gray-900">{{ row.prix_vente }} €/kg</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <i class="fas fa-weight-hanging text-xl text-purple-600 mr-3"></i>
+                                <span class="text-sm font-medium text-gray-900">{{ row.quantite }} kg</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <i class="fas fa-euro-sign text-xl text-green-600 mr-3"></i>
+                                <span class="text-sm font-medium text-gray-900">{{ row.prix_total }} €</span>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {% set current_maraicher.name = row.Nom + row.Prenom %}
+                    {% endfor %}
+
+                    {% if results %}
+                </tbody>
+            </table>
+        </div>
+    </details>
+
+    {# La grosse barre verte avec le total final #}
+    <div class="mt-8 bg-green-600 text-white rounded-lg shadow-lg">
+        <div class="px-8 py-6 flex justify-between items-center">
+            <div class="flex items-center">
+                <i class="fas fa-chart-bar text-3xl mr-4"></i>
+                <span class="text-2xl font-extrabold">VALEUR TOTALE</span>
+            </div>
+            <div class="flex items-center space-x-8">
+                <div>
+                    <span class="text-xl font-bold">{{ results|sum(attribute='quantite') }} kg</span>
+                </div>
+                <div>
+                    <span class="text-xl font-bold">{{ results|sum(attribute='prix_total') }} €</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+</div>
+{% endblock %}
