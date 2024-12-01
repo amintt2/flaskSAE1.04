@@ -6,7 +6,8 @@
 <div class="container mx-auto px-4 py-8">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-3xl font-bold text-green-800">Liste des Récoltes</h1>
-        <a href="/recolte/add" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2">
+        <a href="/recolte/add"
+            class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2">
             <i class="fas fa-plus"></i>
             Ajouter une Récolte
         </a>
@@ -17,17 +18,22 @@
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantité</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Début</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produit</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Maraîcher</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantité
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date
+                        Début</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produit
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Maraîcher
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions
+                    </th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 {% for recolte in recoltes %}
                 <tr class="hover:bg-gray-50 transition-colors duration-200">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ recolte.quantité }} kg</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ recolte.quantite }} kg</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ recolte.Date_Debut }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center">
@@ -48,9 +54,11 @@
                                 <i class="fas fa-user-tie text-2xl text-green-600"></i>
                             </div>
                             <div class="ml-4">
-                                <div class="text-sm font-medium text-gray-900">{{ recolte.Nom }} {{ recolte.Prénom }}</div>
+                                <div class="text-sm font-medium text-gray-900">{{ recolte.Nom }} {{ recolte.Prenom }}
+                                </div>
                                 <div class="inline-block">
-                                    <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full whitespace-nowrap">
+                                    <span
+                                        class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full whitespace-nowrap">
                                         ID: {{ recolte.ID_Maraicher }}
                                     </span>
                                 </div>
@@ -59,13 +67,13 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div class="flex gap-3">
-                            <a href="/recolte/edit?id={{ recolte.ID_recolte }}" 
-                               class="text-indigo-600 hover:text-indigo-900 transition-colors duration-200">
+                            <a href="/recolte/edit?id={{ recolte.ID_recolte }}"
+                                class="text-indigo-600 hover:text-indigo-900 transition-colors duration-200">
                                 <i class="fas fa-edit"></i>
                                 Éditer
                             </a>
-                            <a href="/conflicts/recolte/{{ recolte.ID_recolte }}" 
-                               class="text-red-600 hover:text-red-900 transition-colors duration-200">
+                            <a href="/conflicts/recolte/{{ recolte.ID_recolte }}"
+                                class="text-red-600 hover:text-red-900 transition-colors duration-200">
                                 <i class="fas fa-trash"></i>
                                 Supprimer
                             </a>

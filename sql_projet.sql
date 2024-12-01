@@ -74,8 +74,6 @@ CREATE TABLE recolte(
    ID_Produit INT NOT NULL,
    ID_Maraicher INT NOT NULL,
    PRIMARY KEY(ID_recolte),
-   UNIQUE(ID_Produit),
-   UNIQUE(ID_Maraicher),
    FOREIGN KEY(ID_Produit) REFERENCES Produit(ID_Produit),
    FOREIGN KEY(ID_Maraicher) REFERENCES Maraicher(ID_Maraicher)
 );
@@ -114,4 +112,72 @@ CREATE TABLE est_de_saison(
    FOREIGN KEY(ID_Produit) REFERENCES Produit(ID_Produit),
    FOREIGN KEY(code_saison) REFERENCES Saison(code_saison)
 );
+
+INSERT INTO Maraicher (Nom, Prenom, Adresse, Telephone, Email) VALUES
+('Dupont', 'Jean', '123 Rue de Paris', '0123456789', 'jean.dupont@example.com'),
+('Martin', 'Claire', '456 Avenue de Lyon', '0987654321', 'claire.martin@example.com'),
+('Bernard', 'Luc', '789 Boulevard de Nice', '0147258369', 'luc.bernard@example.com');
+
+INSERT INTO TypeProduit (libelle) VALUES
+('Légume'),
+('Fruit'),
+('Herbe');
+
+
+INSERT INTO Saison (Date_saison, libelle_saison) VALUES
+('2023-01-01', 'Hiver'),
+('2023-04-01', 'Printemps'),
+('2023-07-01', 'Été'),
+('2023-10-01', 'Automne');
+
+
+INSERT INTO LieuMarche (nom) VALUES
+('Marché Central'),
+('Marché de Quartier'),
+('Marché de Village');
+
+
+INSERT INTO Marche (ID_Marche, nom_mache, date_march, nombre_standes, code_lieu) VALUES
+(1, 'Marché de Paris', '2023-01-10', 10, 1),
+(2, 'Marché de Lyon', '2023-01-15', 15, 2),
+(3, 'Marché de Nice', '2023-01-20', 5, 3);
+
+INSERT INTO Produit (nom_produit, prix_vente, idTypeproduit) VALUES
+('Tomate', 2, 1),
+('Carotte', 1, 1),
+('Pomme', 3, 2),
+('Basilic', 4, 3);
+
+INSERT INTO Vente (Date_Vente, ID_Marche, ID_Maraicher, prix_emplacement) VALUES
+('2023-01-11', 1, 1, 50),
+('2023-01-16', 2, 2, 60),
+('2023-01-21', 3, 3, 40);
+
+
+INSERT INTO recolte (quantite, Date_Debut, ID_Produit, ID_Maraicher) VALUES
+(100, '2023-01-01', 1, 1),
+(200, '2023-01-10', 2, 2),
+(75, '2023-01-20', 3, 3);
+
+INSERT INTO est_vendu (quantite, prix, ID_Vente, ID_Produit) VALUES
+(10, 20, 1, 1),
+(5, 15, 2, 2),
+(8, 24, 3, 3);
+
+
+INSERT INTO est_dans (ID_Maraicher, ID_Marche) VALUES
+(1, 1),
+(2, 2),
+(3, 3);
+
+
+INSERT INTO recolte_ce_type (ID_Maraicher, idTypeproduit) VALUES
+(1, 1),
+(2, 2),
+(3, 3);
+
+INSERT INTO est_de_saison (ID_Produit, code_saison) VALUES
+(1, 1),
+(2, 2),
+(3, 3);
 

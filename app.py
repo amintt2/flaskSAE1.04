@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 from flask import Flask, request, render_template, redirect, flash
 import time
-from datetime import date
+from datetime import date, timedelta, datetime
 
 app = Flask(__name__)
 app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -18,7 +18,7 @@ def get_db():
             host="localhost",
             user="constantsuchet",
             password="Password123!",
-            database="maraicher_db",        # nom de votre base de données
+            database="maraicher_db",        # nom de votre base de donnees
             charset='utf8mb4',
             cursorclass=pymysql.cursors.DictCursor
         )
@@ -41,7 +41,7 @@ def home():
         {
             "name": "SUCHET Constant",
             "title": "Page Accueil et Maraîcher",
-            "description": "Développement des pages accueil/recolte pour le projet de base de données SAE 1.04.",
+            "description": "Developpement des pages accueil/recolte pour le projet de base de donnees SAE 1.04.",
             "profile_url": "/recolte", 
             "created_pages": {
                 "Recolte": "/recolte",
@@ -50,7 +50,7 @@ def home():
         {
             "name": "TOUZI Tahar Amine",
             "title": "Page Produits",
-            "description": "Développement de la page produits pour le projet de base de données SAE 1.04.",
+            "description": "Developpement de la page produits pour le projet de base de donnees SAE 1.04.",
             "profile_url": "/produit",
             "created_pages": {
                 "Produit": "/produit",
@@ -58,17 +58,17 @@ def home():
         },
         {
             "name": "SONET Noe",
-            "title": "Page Marché", 
-            "description": "Développement de la page marché pour le projet de base de données SAE 1.04.",
+            "title": "Page Marche", 
+            "description": "Developpement de la page marche pour le projet de base de donnees SAE 1.04.",
             "profile_url": "/marche",
             "created_pages": {
-                "Marché": "/marche",
+                "Marche": "/marche",
             }
         },
         {
             "name": "SPRINGER Theo",
             "title": "Page Vente",
-            "description": "Développement de la page vente pour le projet de base de données SAE 1.04.",
+            "description": "Developpement de la page vente pour le projet de base de donnees SAE 1.04.",
             "profile_url": "/vente",
             "created_pages": {
                 "Vente": "/vente", 
@@ -81,9 +81,9 @@ def home():
 def show_recoltes():
     mycursor = get_db().cursor()
     
-    # Requête principale pour les récoltes
+    # Requête principale pour les recoltes
     sql_recoltes = """
-        SELECT recolte.*, Produit.nom_produit, Maraicher.Nom, Maraicher.Prénom 
+        SELECT recolte.*, Produit.nom_produit, Maraicher.Nom, Maraicher.Prenom 
         FROM recolte
         JOIN Produit ON recolte.ID_Produit = Produit.ID_Produit
         JOIN Maraicher ON recolte.ID_Maraicher = Maraicher.ID_Maraicher
@@ -94,8 +94,8 @@ def show_recoltes():
         SELECT 
             Produit.nom_produit,
             COUNT(*) as nombre_recoltes,
-            SUM(recolte.quantité) as quantite_totale,
-            AVG(recolte.quantité) as moyenne_quantite
+            SUM(recolte.quantite) as quantite_totale,
+            AVG(recolte.quantite) as moyenne_quantite
         FROM recolte
         JOIN Produit ON recolte.ID_Produit = Produit.ID_Produit
         GROUP BY Produit.ID_Produit, Produit.nom_produit
@@ -114,66 +114,96 @@ def show_recoltes():
 @app.route('/recolte/add', methods=['GET'])
 def add_recolte_get():
     mycursor = get_db().cursor()
+    today_date = datetime.today()
     
-    # Get all products and check which ones are in récolte
+    # Get all products and check which ones are in recolte within the date range
     sql_produits = """
-        SELECT Produit.*, 
-               CASE WHEN recolte.ID_Produit IS NOT NULL THEN 1 ELSE 0 END as in_recolte
+        SELECT DISTINCT Produit.*, 
+               CASE WHEN EXISTS (
+                   SELECT 1 FROM recolte 
+                   WHERE recolte.ID_Produit = Produit.ID_Produit
+                   AND recolte.Date_Debut < DATE_ADD(%s, INTERVAL 7 DAY)
+                   AND recolte.Date_Debut > DATE_SUB(%s, INTERVAL 7 DAY)
+               ) THEN 1 ELSE 0 END as in_recolte,
+               (SELECT Date_Debut FROM recolte 
+                WHERE recolte.ID_Produit = Produit.ID_Produit
+                AND recolte.Date_Debut < DATE_ADD(%s, INTERVAL 7 DAY)
+                AND recolte.Date_Debut > DATE_SUB(%s, INTERVAL 7 DAY)
+                LIMIT 1) as Date_Debut
         FROM Produit
-        LEFT JOIN recolte ON Produit.ID_Produit = recolte.ID_Produit
     """
-    mycursor.execute(sql_produits)
+    mycursor.execute(sql_produits, (today_date, today_date, today_date, today_date))
     produits = mycursor.fetchall()
     
-    # Get all maraichers and check which ones are in récolte
+    # Get all maraichers and check which ones are in recolte within the date range
     sql_maraichers = """
-        SELECT Maraicher.*, 
-               CASE WHEN recolte.ID_Maraicher IS NOT NULL THEN 1 ELSE 0 END as in_recolte
+        SELECT DISTINCT Maraicher.*, 
+               CASE WHEN EXISTS (
+                   SELECT 1 FROM recolte 
+                   WHERE recolte.ID_Maraicher = Maraicher.ID_Maraicher
+                   AND recolte.Date_Debut < DATE_ADD(%s, INTERVAL 7 DAY)
+                   AND recolte.Date_Debut > DATE_SUB(%s, INTERVAL 7 DAY)
+               ) THEN 1 ELSE 0 END as in_recolte,
+               (SELECT Date_Debut FROM recolte 
+                WHERE recolte.ID_Maraicher = Maraicher.ID_Maraicher
+                AND recolte.Date_Debut < DATE_ADD(%s, INTERVAL 7 DAY)
+                AND recolte.Date_Debut > DATE_SUB(%s, INTERVAL 7 DAY)
+                LIMIT 1) as Date_Debut
         FROM Maraicher
-        LEFT JOIN recolte ON Maraicher.ID_Maraicher = recolte.ID_Maraicher
     """
-    mycursor.execute(sql_maraichers)
+    mycursor.execute(sql_maraichers, (today_date, today_date, today_date, today_date))
     maraichers = mycursor.fetchall()
     
-    today_date = date.today().strftime('%Y-%m-%d')
+    today_date_str = today_date.strftime('%Y-%m-%d')
+    next_week_date = (today_date + timedelta(days=7)).strftime('%Y-%m-%d')
+    last_week_date = (today_date - timedelta(days=7)).strftime('%Y-%m-%d')
+
     return render_template('recolte/add_recolte.html', 
                          produits=produits, 
                          maraichers=maraichers,
-                         today_date=today_date)
+                         today_date=today_date_str,
+                         next_week_date=next_week_date,
+                         last_week_date=last_week_date)
 
 @app.route('/recolte/add', methods=['POST'])
 def add_recolte_post():
     mycursor = get_db().cursor()
-    quantite = request.form.get('quantité', type=int)
+    quantite = request.form.get('quantite')
     date_debut = request.form.get('Date_Debut')
-    id_produit = request.form.get('ID_Produit', type=int)
-    id_maraicher = request.form.get('ID_Maraicher', type=int)
+    id_produit = request.form.get('ID_Produit')
+    id_maraicher = request.form.get('ID_Maraicher')
 
-    # Vérification pour le maraîcher
+    # Verification pour le maraîcher
     check_sql = """
-        SELECT * FROM recolte WHERE ID_Maraicher = %s
+        SELECT * FROM recolte 
+        WHERE ID_Maraicher = %s 
+        AND Date_Debut < DATE_ADD(%s, INTERVAL 7 DAY)
+        AND Date_Debut > DATE_SUB(%s, INTERVAL 7 DAY)
     """
-    mycursor.execute(check_sql, (id_maraicher,))    
+    mycursor.execute(check_sql, (id_maraicher, date_debut, date_debut))
     existing_recolte = mycursor.fetchone()
 
-    if existing_recolte:  # Supprimez la comparaison avec id_recolte car c'est un ajout
-        flash('Ce maraicher a déjà une récolte en cours', 'error')
+    if existing_recolte:
+        flash('Ce maraicher a déjà une récolte prévue dans la même semaine', 'error')
         return redirect('/recolte/add')
 
-    # Vérification pour le produit
+    # Verification pour le produit
     check_sql = """
-        SELECT * FROM recolte WHERE ID_Produit = %s
+        SELECT * FROM recolte 
+        WHERE ID_Produit = %s 
+        AND Date_Debut < DATE_ADD(%s, INTERVAL 7 DAY)
+        AND Date_Debut > DATE_SUB(%s, INTERVAL 7 DAY)
     """
-    mycursor.execute(check_sql, (id_produit,))
+    mycursor.execute(check_sql, (id_produit, date_debut, date_debut))
     existing_recolte = mycursor.fetchone()
 
-    if existing_recolte:  # Supprimez la comparaison avec id_recolte car c'est un ajout
-        flash('Ce produit a déjà une récolte en cours', 'error')
+    if existing_recolte:
+        flash('Ce produit a déjà une récolte prévue dans la même semaine', 'error')
         return redirect('/recolte/add')
 
-    # Le reste du code reste inchangé
+    # Si aucun conflit, on ajoute la récolte
     sql = """
-        INSERT INTO recolte (quantité, Date_Debut, ID_Produit, ID_Maraicher) 
+        INSERT INTO recolte (quantite, Date_Debut, ID_Produit, ID_Maraicher)
         VALUES (%s, %s, %s, %s)
     """
     mycursor.execute(sql, (quantite, date_debut, id_produit, id_maraicher))
@@ -187,14 +217,14 @@ def edit_recolte():
     id_recolte = request.args.get('id', type=int)
     
     if not id_recolte:
-        flash('ID récolte non spécifié', 'error')
+        flash('ID recolte non specifie', 'error')
         return redirect('/recolte')
     
     mycursor = get_db().cursor()
     
-    # Get current récolte info
+    # Get the basic recolte information
     sql = """
-        SELECT recolte.*, Produit.nom_produit, Maraicher.Nom, Maraicher.Prénom 
+        SELECT recolte.*, Produit.nom_produit, Maraicher.Nom, Maraicher.Prenom 
         FROM recolte 
         JOIN Produit ON recolte.ID_produit = Produit.ID_produit 
         JOIN Maraicher ON recolte.ID_maraicher = Maraicher.ID_maraicher 
@@ -204,74 +234,76 @@ def edit_recolte():
     recolte = mycursor.fetchone()
     
     if not recolte:
-        flash('Récolte non trouvée', 'error')
+        flash('Recolte non trouvee', 'error')
         return redirect('/recolte')
-    
-    # Get products with in_recolte status, excluding current récolte
-    sql_produits = """
-        SELECT Produit.*, 
-               CASE WHEN (recolte.ID_Produit IS NOT NULL AND recolte.ID_recolte != %s) THEN 1 ELSE 0 END as in_recolte
-        FROM Produit
-        LEFT JOIN recolte ON Produit.ID_Produit = recolte.ID_Produit
-    """
-    mycursor.execute(sql_produits, (id_recolte,))
+
+    # Get all products and maraichers
+    mycursor.execute("SELECT * FROM Produit")
     produits = mycursor.fetchall()
     
-    # Get maraichers with in_recolte status, excluding current récolte
-    sql_maraichers = """
-        SELECT Maraicher.*, 
-               CASE WHEN (recolte.ID_Maraicher IS NOT NULL AND recolte.ID_recolte != %s) THEN 1 ELSE 0 END as in_recolte
-        FROM Maraicher
-        LEFT JOIN recolte ON Maraicher.ID_Maraicher = recolte.ID_Maraicher
-    """
-    mycursor.execute(sql_maraichers, (id_recolte,))
+    mycursor.execute("SELECT * FROM Maraicher")
     maraichers = mycursor.fetchall()
     
+    # Calculate dates
+    today_date = datetime.today()
+    today_date_str = today_date.strftime('%Y-%m-%d')
+    next_week_date = (today_date + timedelta(days=7)).strftime('%Y-%m-%d')
+    last_week_date = (today_date - timedelta(days=7)).strftime('%Y-%m-%d')
+
     return render_template('recolte/edit_recolte.html', 
                          recolte=recolte, 
                          produits=produits, 
-                         maraichers=maraichers)
+                         maraichers=maraichers,
+                         today_date=today_date_str,
+                         next_week_date=next_week_date,
+                         last_week_date=last_week_date)
 
 @app.route('/recolte/edit', methods=['POST'])
 def edit_recolte_post():
     mycursor = get_db().cursor()
     id_recolte = request.form.get('ID_recolte', type=int)
-    quantite = request.form.get('quantité', type=int)
+    quantite = request.form.get('quantite', type=int)
     date_debut = request.form.get('Date_Debut')
     id_produit = request.form.get('ID_Produit', type=int)
     id_maraicher = request.form.get('ID_Maraicher', type=int)
 
     check_sql = """
-        SELECT * FROM recolte WHERE ID_Maraicher = %s
+        SELECT * FROM recolte 
+        WHERE ID_Maraicher = %s 
+        AND ID_recolte != %s 
+        AND Date_Debut < DATE_ADD(%s, INTERVAL 7 DAY)
+        AND DATE_ADD(Date_Debut, INTERVAL 7 DAY) > %s
     """
-
-    mycursor.execute(check_sql, (id_maraicher,))    
+    mycursor.execute(check_sql, (id_maraicher, id_recolte, date_debut, date_debut))    
     existing_recolte = mycursor.fetchone()
 
-    if existing_recolte and existing_recolte['ID_recolte'] != id_recolte:
-        flash('Ce maraicher a déjà une récolte en cours', 'error')
+    if existing_recolte:
+        flash('Ce maraicher a déjà une recolte en cours dans la même semaine', 'error')
         return redirect('/recolte/edit?id=' + str(id_recolte))
 
     check_sql = """
-        SELECT * FROM recolte WHERE ID_Produit = %s
+        SELECT * FROM recolte 
+        WHERE ID_Produit = %s 
+        AND ID_recolte != %s 
+        AND Date_Debut < DATE_ADD(%s, INTERVAL 7 DAY)
+        AND DATE_ADD(Date_Debut, INTERVAL 7 DAY) > %s
     """
-    mycursor.execute(check_sql, (id_produit,))
+    mycursor.execute(check_sql, (id_produit, id_recolte, date_debut, date_debut))
     existing_recolte = mycursor.fetchone()
 
-    if existing_recolte and existing_recolte['ID_recolte'] != id_recolte:
-        flash('Ce produit a déjà une récolte en cours', 'error')
+    if existing_recolte:
+        flash('Ce produit a déjà une recolte en cours dans la même semaine', 'error')
         return redirect('/recolte/edit?id=' + str(id_recolte))
 
-    
     sql = """
         UPDATE recolte 
-        SET quantité = %s, Date_Debut = %s, ID_Produit = %s, ID_Maraicher = %s
+        SET quantite = %s, Date_Debut = %s, ID_Produit = %s, ID_Maraicher = %s
         WHERE ID_recolte = %s
     """
     mycursor.execute(sql, (quantite, date_debut, id_produit, id_maraicher, id_recolte))
     get_db().commit()
     
-    flash('Récolte mise à jour avec succès', 'success')
+    flash('Recolte mise à jour avec succès', 'success')
     return redirect('/recolte')
 
 @app.route('/recolte/delete', methods=['POST'])
@@ -287,7 +319,7 @@ def show_recolte_conflicts(recolte_id):
     mycursor = get_db().cursor()
     
     sql = """
-        SELECT recolte.*, Produit.nom_produit, Maraicher.Nom, Maraicher.Prénom 
+        SELECT recolte.*, Produit.nom_produit, Maraicher.Nom, Maraicher.Prenom 
         FROM recolte
         LEFT JOIN Produit ON recolte.ID_Produit = Produit.ID_Produit
         LEFT JOIN Maraicher ON recolte.ID_Maraicher = Maraicher.ID_Maraicher
@@ -297,7 +329,7 @@ def show_recolte_conflicts(recolte_id):
     recolte = mycursor.fetchone()
     
     if not recolte:
-        flash('Récolte non trouvée', 'error')
+        flash('Recolte non trouvee', 'error')
         return redirect('/recolte')
     
     conflicts = {}
@@ -312,7 +344,7 @@ def show_recolte_conflicts(recolte_id):
         conflicts['maraicher'] = {
             'ID_Maraicher': recolte['ID_Maraicher'],
             'Nom': recolte['Nom'],
-            'Prénom': recolte['Prénom']
+            'Prenom': recolte['Prenom']
         }
     
     return render_template('recolte/conflict_recolte.html', 
@@ -331,7 +363,49 @@ def produit():
 def marche():
     return render_template('marche/show_marche.html')
 
+@app.route('/etat_recolte', methods=['GET', 'POST'])
+def etat_recolte():
+    if request.method == 'POST':
+        start_date = request.form.get('start_date')
+        end_date = request.form.get('end_date')
+        mycursor = get_db().cursor()
+        
+        sql = """
+            SELECT 
+                Maraicher.Nom, 
+                Maraicher.Prenom, 
+                Produit.nom_produit,
+                Produit.prix_vente,
+                recolte.quantite as quantite,
+                (recolte.quantite * Produit.prix_vente) as prix_total
+            FROM recolte
+            JOIN Maraicher ON recolte.ID_Maraicher = Maraicher.ID_Maraicher
+            JOIN Produit ON recolte.ID_Produit = Produit.ID_Produit
+            WHERE recolte.Date_Debut BETWEEN %s AND %s
+            ORDER BY Maraicher.Nom, Maraicher.Prenom, Produit.nom_produit
+        """
+        
+        mycursor.execute(sql, (start_date, end_date))
+        results = mycursor.fetchall()
+        
+        return render_template('recolte/etat_recolte.html', 
+                             results=results,
+                             start_date=start_date,
+                             end_date=end_date)
+    
+    return render_template('recolte/etat_recolte.html')
 
+@app.template_filter('to_datetime')
+def to_datetime(date_value):
+    if not date_value:
+        return None
+    if isinstance(date_value, str):
+        return datetime.strptime(date_value, '%Y-%m-%d')
+    if isinstance(date_value, datetime):
+        return date_value
+    if isinstance(date_value, date):
+        return datetime.combine(date_value, datetime.min.time())
+    return None
 
 if __name__ == '__main__':
     app.run(debug=True)
