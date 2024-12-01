@@ -1,0 +1,46 @@
+name: Flask App CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Étape 1 : Récupérer le code source
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # Étape 2 : Configurer Python
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10' # Remplacez par la version Python que vous utilisez
+
+    # Étape 3 : Préparer l'environnement virtuel
+    - name: Set up virtual environment
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+        pip install --upgrade pip
+
+    # Étape 4 : Rendre Launcher.sh exécutable et l'exécuter
+    - name: Run Launcher script
+      run: |
+        chmod +x Launcher.sh
+        ./Launcher.sh
+
+    # Étape 5 : Tests (optionnel, en cas de tests intégrés)
+    - name: Run tests
+      run: |
+        source venv/bin/activate
+        pytest
+
+    # Étape 6 : Déploiement (si nécessaire)
+    - name: Deploy to production
+      if: ${{ success() }}
+      run: |
+        echo "Déploiement réussi !" # Remplacez par les étapes de déploiement réel
