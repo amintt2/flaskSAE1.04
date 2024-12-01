@@ -5,9 +5,17 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
     # Étape 1 : Récupérer le code source
@@ -34,10 +42,17 @@ jobs:
         source venv/bin/activate
         python -c "from app import app; print('Application startup check successful')"
 
-    # Étape 5 : Déployer sur GitHub Pages
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
+    # Étape 5 : Configuration de Pages
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+
+    # Étape 6 : Upload l'artifact
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./templates
-        enable_jekyll: false
+        path: './templates'
+
+    # Étape 7 : Déployer sur GitHub Pages
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
