@@ -34,17 +34,25 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    # Étape 4 : Configuration de Pages
+    # Étape 4 : Préparer les fichiers statiques
+    - name: Prepare static files
+      run: |
+        mkdir -p _site
+        cp -r templates/* _site/
+        cp templates/home.html _site/index.html
+        cp -r static _site/
+
+    # Étape 5 : Configuration de Pages
     - name: Setup Pages
       uses: actions/configure-pages@v4
 
-    # Étape 5 : Upload l'artifact
+    # Étape 6 : Upload l'artifact
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:
-        path: './templates'
+        path: './_site'
 
-    # Étape 6 : Déployer sur GitHub Pages
+    # Étape 7 : Déployer sur GitHub Pages
     - name: Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@v4
