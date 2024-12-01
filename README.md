@@ -19,6 +19,15 @@ Ce tutoriel vous guidera pas à pas pour le setup et l'explication du projet de 
 
 * **Si vous n'avez pas encore créé la base de données et l'utilisateur MySQL, suivez ces étapes :**
 
+**Attention :**
+- il faut se connecter avec l'utilisateur root de MySQL
+- mots de passe de l'utilisateur root de MySQL a été change lors de la création de la base de données
+
+  0.**Connectez vous avec l'utilisateur root de MySQL :**
+     ```bash
+     mysql -u root -p
+     ``` 
+
   1. **Créez une base de données MySQL :**
      ```sql
      CREATE DATABASE maraicher_db;
@@ -39,8 +48,20 @@ Ce tutoriel vous guidera pas à pas pour le setup et l'explication du projet de 
 
 ### Lancement du projet
 
-* Exécutez le projet en lançant `flask run --debug` dans votre répertoire de projet.
-* Ouvrez un navigateur web et accédez à `http://localhost:5000` pour voir le site web en action.
+* Rendez le script de lancement exécutable :
+  ```bash
+  chmod u+x Launcher.sh
+  ```
+
+* Lancez le projet en utilisant le script :
+  ```bash
+  ./Launcher.sh
+  ```
+
+Ce script va :
+1. Créer un environnement virtuel s'il n'existe pas déjà
+2. Installer les dépendances nécessaires
+3. Lancer le serveur Flask en mode debug
 
 ## Comprendre les requêtes HTTP GET et POST pour la gestion des récoltes
 
