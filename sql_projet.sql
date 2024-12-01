@@ -11,9 +11,9 @@ USE maraicher_db;
 CREATE TABLE Maraicher(
    ID_Maraicher INT AUTO_INCREMENT,
    Nom VARCHAR(50),
-   Prénom VARCHAR(50),
+   Prenom VARCHAR(50),
    Adresse VARCHAR(50),
-   Téléphone VARCHAR(15),
+   Telephone VARCHAR(15),
    Email VARCHAR(50),
    PRIMARY KEY(ID_Maraicher)
 );
@@ -38,12 +38,12 @@ CREATE TABLE LieuMarche(
 );
 
 CREATE TABLE Marche( -- enlever les accents
-   ID_Marché INT,
-   nom_maché VARCHAR(50),
+   ID_Marche INT,
+   nom_mache VARCHAR(50),
    date_march DATE,
    nombre_standes INT,
    code_lieu INT NOT NULL,
-   PRIMARY KEY(ID_Marché),
+   PRIMARY KEY(ID_Marche),
    FOREIGN KEY(code_lieu) REFERENCES LieuMarche(code_lieu)
 );
 
@@ -59,17 +59,17 @@ CREATE TABLE Produit(
 CREATE TABLE Vente(
    ID_Vente INT AUTO_INCREMENT,
    Date_Vente DATE,
-   ID_Marché INT NOT NULL,
+   ID_Marche INT NOT NULL,
    ID_Maraicher INT NOT NULL,
    prix_emplacement INT,
    PRIMARY KEY(ID_Vente),
-   FOREIGN KEY(ID_Marché) REFERENCES Marche(ID_Marché),
+   FOREIGN KEY(ID_Marche) REFERENCES Marche(ID_Marche),
    FOREIGN KEY(ID_Maraicher) REFERENCES Maraicher(ID_Maraicher)
 );
 
 CREATE TABLE recolte(
    ID_recolte INT AUTO_INCREMENT,
-   quantité INT,
+   quantite INT,
    Date_Debut DATE NOT NULL,
    ID_Produit INT NOT NULL,
    ID_Maraicher INT NOT NULL,
@@ -82,7 +82,7 @@ CREATE TABLE recolte(
 
 CREATE TABLE est_vendu( -- changer nom
    ID_Est_Vendu INT AUTO_INCREMENT,
-   quantité INT,
+   quantite INT,
    prix INT,
    ID_Vente INT NOT NULL,
    ID_Produit INT NOT NULL,
@@ -93,10 +93,10 @@ CREATE TABLE est_vendu( -- changer nom
 
 CREATE TABLE est_dans(
    ID_Maraicher INT,
-   ID_Marché INT,
-   PRIMARY KEY(ID_Maraicher, ID_Marché),
+   ID_Marche INT,
+   PRIMARY KEY(ID_Maraicher, ID_Marche),
    FOREIGN KEY(ID_Maraicher) REFERENCES Maraicher(ID_Maraicher),
-   FOREIGN KEY(ID_Marché) REFERENCES Marche(ID_Marché)
+   FOREIGN KEY(ID_Marche) REFERENCES Marche(ID_Marche)
 );
 
 CREATE TABLE recolte_ce_type(
@@ -116,34 +116,34 @@ CREATE TABLE est_de_saison(
 );
 
 -- Independent tables first
-INSERT INTO Maraicher (Nom, Prénom, Adresse, Téléphone, Email) VALUES
-('Dupont', 'Jean', '123 rue des Légumes', '0123456789', 'jean.dupont@email.com'),
+INSERT INTO Maraicher (Nom, Prenom, Adresse, Telephone, Email) VALUES
+('Dupont', 'Jean', '123 rue des Legumes', '0123456789', 'jean.dupont@email.com'),
 ('Martin', 'Marie', '456 avenue des Fruits', '0234567890', 'marie.martin@email.com'),
 ('Bernard', 'Pierre', '789 boulevard Bio', '0345678901', 'pierre.bernard@email.com');
 
 INSERT INTO TypeProduit (libelle) VALUES
-('Légume'),
+('Legume'),
 ('Fruit'),
 ('Herbe aromatique'),
-('Légume-fruit');
+('Legume-fruit');
 
 INSERT INTO Saison (Date_saison, libelle_saison) VALUES
 ('2024-03-20', 'Printemps'),
-('2024-06-21', 'Été'),
+('2024-06-21', 'ete'),
 ('2024-09-22', 'Automne'),
 ('2024-12-21', 'Hiver');
 
 INSERT INTO LieuMarche (nom) VALUES
 ('Place Centrale'),
-('Marché Couvert'),
+('Marche Couvert'),
 ('Place de la Mairie'),
-('Halle aux Légumes');
+('Halle aux Legumes');
 
 -- Tables with single dependencies
-INSERT INTO Marche (ID_Marché, nom_maché, date_march, code_lieu) VALUES
-(1, 'Marché Bio', '2024-04-01', 1),
-(2, 'Marché des Producteurs', '2024-04-02', 2),
-(3, 'Marché Local', '2024-04-03', 3);
+INSERT INTO Marche (ID_Marche, nom_mache, date_march, code_lieu) VALUES
+(1, 'Marche Bio', '2024-04-01', 1),
+(2, 'Marche des Producteurs', '2024-04-02', 2),
+(3, 'Marche Local', '2024-04-03', 3);
 
 INSERT INTO Produit (nom_produit, idTypeproduit) VALUES
 ('Tomate', 4),
@@ -153,22 +153,22 @@ INSERT INTO Produit (nom_produit, idTypeproduit) VALUES
 ('Courgette', 1);
 
 -- Tables with multiple dependencies
-INSERT INTO Vente (Date_Vente, ID_Marché, ID_Maraicher) VALUES
+INSERT INTO Vente (Date_Vente, ID_Marche, ID_Maraicher) VALUES
 ('2024-04-01', 1, 1),
 ('2024-04-02', 2, 2),
 ('2024-04-03', 3, 3);
 
-INSERT INTO recolte (quantité, Date_Debut, ID_Produit, ID_Maraicher) VALUES
+INSERT INTO recolte (quantite, Date_Debut, ID_Produit, ID_Maraicher) VALUES
 (100, '2024-03-15', 1, 1),
 (150, '2024-03-16', 2, 2),
 (200, '2024-03-17', 3, 3);
 
-INSERT INTO est_vendu (ID_Est_Vendu, quantité, prix, ID_Vente, ID_Produit) VALUES
+INSERT INTO est_vendu (ID_Est_Vendu, quantite, prix, ID_Vente, ID_Produit) VALUES
 (1, 50, 200, 1, 1),
 (2, 75, 150, 2, 2),
 (3, 100, 300, 3, 3);
 
-INSERT INTO est_dans (ID_Maraicher, ID_Marché) VALUES
+INSERT INTO est_dans (ID_Maraicher, ID_Marche) VALUES
 (1, 1),
 (2, 2),
 (3, 3);
@@ -179,8 +179,8 @@ INSERT INTO recolte_ce_type (ID_Maraicher, idTypeproduit) VALUES
 (3, 3);
 
 INSERT INTO est_de_saison (ID_Produit, code_saison) VALUES
-(1, 2), -- Tomates en été
+(1, 2), -- Tomates en ete
 (2, 1), -- Carottes au printemps
 (3, 3), -- Pommes en automne
-(4, 2), -- Basilic en été
-(5, 2); -- Courgettes en été
+(4, 2), -- Basilic en ete
+(5, 2); -- Courgettes en ete
