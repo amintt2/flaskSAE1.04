@@ -1,0 +1,58 @@
+name: Flask App CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+    # Étape 1 : Récupérer le code source
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # Étape 2 : Configurer Python
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    # Étape 3 : Installer les dépendances
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    # Étape 4 : Préparer les fichiers statiques
+    - name: Prepare static files
+      run: |
+        mkdir -p _site
+        cp -r templates/* _site/
+        cp templates/home.html _site/index.html
+        cp -r static _site/
+
+    # Étape 5 : Configuration de Pages
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+
+    # Étape 6 : Upload l'artifact
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: './_site'
+
+    # Étape 7 : Déployer sur GitHub Pages
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4

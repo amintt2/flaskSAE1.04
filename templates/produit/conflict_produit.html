@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Conflits de Suppression - Produit{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-red-600 mb-2">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    Conflits de Suppression
+                </h1>
+                <p class="text-gray-600">
+                    Le produit que vous souhaitez supprimer est lié à d'autres éléments dans la base de données.
+                    Vous devez d'abord résoudre ces conflits avant de pouvoir le supprimer.
+                </p>
+            </div>
+
+            {% if conflicts %}
+            <div class="space-y-6">
+                {% if conflicts.recoltes %}
+                <div class="border-l-4 border-yellow-500 bg-yellow-50 p-4 rounded">
+                    <h2 class="text-xl font-semibold text-yellow-800 mb-3">
+                        <i class="fas fa-seedling mr-2"></i>
+                        Récoltes associées
+                    </h2>
+                    <div class="pl-4">
+                        <p class="text-yellow-700">Ce produit est lié aux récoltes suivantes :</p>
+                        <ul class="list-disc list-inside mt-2 text-yellow-600">
+                            {% for recolte in conflicts.recoltes %}
+                            <li>Récolte du {{ recolte.date_debut }} (ID: {{ recolte.ID_recolte }})</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if conflicts.ventes %}
+                <div class="border-l-4 border-blue-500 bg-blue-50 p-4 rounded">
+                    <h2 class="text-xl font-semibold text-blue-800 mb-3">
+                        <i class="fas fa-shopping-cart mr-2"></i>
+                        Ventes associées
+                    </h2>
+                    <div class="pl-4">
+                        <p class="text-blue-700">Ce produit est lié aux ventes suivantes :</p>
+                        <ul class="list-disc list-inside mt-2 text-blue-600">
+                            {% for vente in conflicts.ventes %}
+                            <li>Vente du {{ vente.date_vente }} (ID: {{ vente.ID_vente }})</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="mt-8 space-y-4">
+                <p class="text-gray-700">Pour supprimer ce produit, vous devez d'abord :</p>
+                <ul class="list-disc list-inside text-gray-600 ml-4">
+                    <li>Supprimer ou modifier les récoltes associées</li>
+                    <li>Supprimer ou modifier les ventes associées</li>
+                </ul>
+            </div>
+            {% else %}
+            <div class="text-center py-8">
+                <p class="text-gray-600 mb-6">Aucun conflit trouvé. Vous pouvez supprimer ce produit.</p>
+            </div>
+            {% endif %}
+
+            <div class="mt-8 flex justify-end space-x-4">
+                <a href="/produit" 
+                   class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors duration-200">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Retour
+                </a>
+                {% if not conflicts %}
+                <form action="/produit/delete" method="POST" class="inline">
+                    <input type="hidden" name="id_produit" value="{{ produit_id }}">
+                    <button type="submit" 
+                            class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors duration-200">
+                        <i class="fas fa-trash mr-2"></i>
+                        Supprimer le produit
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

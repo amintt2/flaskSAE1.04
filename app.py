@@ -18,7 +18,7 @@ def get_db():
             host="localhost",
             user="constantsuchet",
             password="Password123!",
-            database="maraicher_db",        # nom de votre base de donnees
+            database="maraicher_db",
             charset='utf8mb4',
             cursorclass=pymysql.cursors.DictCursor
         )
@@ -154,6 +154,10 @@ def add_recolte_get():
     mycursor.execute(sql_maraichers, (today_date, today_date, today_date, today_date))
     maraichers = mycursor.fetchall()
     
+    # Get all seasons
+    mycursor.execute("SELECT * FROM Saison")
+    saisons = mycursor.fetchall()
+    
     today_date_str = today_date.strftime('%Y-%m-%d')
     next_week_date = (today_date + timedelta(days=7)).strftime('%Y-%m-%d')
     last_week_date = (today_date - timedelta(days=7)).strftime('%Y-%m-%d')
@@ -163,7 +167,8 @@ def add_recolte_get():
                          maraichers=maraichers,
                          today_date=today_date_str,
                          next_week_date=next_week_date,
-                         last_week_date=last_week_date)
+                         last_week_date=last_week_date,
+                         saisons=saisons)
 
 @app.route('/recolte/add', methods=['POST'])
 def add_recolte_post():
@@ -357,7 +362,123 @@ def vente():
 
 @app.route('/produit')
 def produit():
+    mycursor = get_db().cursor()
+    
+    # Requête modifiée pour utiliser est_de_saison au lieu de Produit_Saison
+    sql = """
+        SELECT p.*, 
+               GROUP_CONCAT(s.libelle_saison) as saisons,
+               GROUP_CONCAT(s.code_saison) as saisons_id
+        FROM Produit p
+        LEFT JOIN est_de_saison eds ON p.ID_Produit = eds.ID_Produit
+        LEFT JOIN Saison s ON eds.code_saison = s.code_saison
+        GROUP BY p.ID_Produit
+    """
+    mycursor.execute(sql)
+    produits = mycursor.fetchall()
+    
+    return render_template('produit/show_produit.html', produits=produits)
+
+@app.route('/produit/show', methods=['GET'])
+def show_produit():
     return render_template('produit/show_produit.html')
+
+@app.route('/produit/add', methods=['GET'])
+def add_produit():
+    mycursor = get_db().cursor()
+    # Récupération des saisons depuis la base de données
+    mycursor.execute("SELECT code_saison as ID_Saison, libelle_saison as Nom_Saison FROM Saison")
+    saisons = mycursor.fetchall()
+    return render_template('produit/add_produit.html', saisons=saisons)
+
+@app.route('/produit/add', methods=['POST'])
+def add_produit_post():
+    mycursor = get_db().cursor()
+    
+    nom_produit = request.form.get('nom_produit')
+    prix_vente = request.form.get('prix_vente')
+    saisons = request.form.getlist('saisons')
+    
+    try:
+        # Insertion du produit (notez que idTypeproduit est requis)
+        sql = "INSERT INTO Produit (nom_produit, prix_vente, idTypeproduit) VALUES (%s, %s, %s)"
+        mycursor.execute(sql, (nom_produit, prix_vente, 1))  # 1 est l'ID par défaut pour le type
+        id_produit = mycursor.lastrowid
+        
+        # Insertion des saisons pour ce produit
+        if saisons:
+            sql_saison = "INSERT INTO est_de_saison (ID_Produit, code_saison) VALUES (%s, %s)"
+            for saison in saisons:
+                mycursor.execute(sql_saison, (id_produit, saison))
+        
+        get_db().commit()
+        flash('Produit ajouté avec succès', 'success')
+        return redirect('/produit')
+        
+    except Exception as e:
+        get_db().rollback()
+        flash(f'Erreur lors de l\'ajout du produit: {str(e)}', 'error')
+        return redirect('/produit/add')
+
+@app.route('/produit/edit', methods=['GET'])
+def edit_produit():
+    id_produit = request.args.get('id', type=int)
+    
+    if not id_produit:
+        flash('ID produit non spécifié', 'error')
+        return redirect('/produit')
+    
+    mycursor = get_db().cursor()
+    
+    # Récupération du produit et de ses saisons
+    sql = """
+        SELECT p.*, 
+               GROUP_CONCAT(s.libelle_saison) as saisons,
+               GROUP_CONCAT(s.code_saison) as saisons_id
+        FROM Produit p
+        LEFT JOIN est_de_saison eds ON p.ID_Produit = eds.ID_Produit
+        LEFT JOIN Saison s ON eds.code_saison = s.code_saison
+        WHERE p.ID_Produit = %s
+        GROUP BY p.ID_Produit
+    """
+    mycursor.execute(sql, (id_produit,))
+    produit = mycursor.fetchone()
+    
+    # Récupération de toutes les saisons
+    mycursor.execute("SELECT code_saison as ID_Saison, libelle_saison as Nom_Saison FROM Saison")
+    saisons = mycursor.fetchall()
+    
+    return render_template('produit/edit_produit.html', produit=produit, saisons=saisons)
+
+@app.route('/produit/edit', methods=['POST'])
+def edit_produit_post():
+    mycursor = get_db().cursor()
+    
+    id_produit = request.form.get('id_produit', type=int)
+    nom_produit = request.form.get('nom_produit')
+    prix_vente = request.form.get('prix_vente')
+    saisons = request.form.getlist('saisons')
+    
+    try:
+        # Mise à jour du produit
+        sql = "UPDATE Produit SET nom_produit = %s, prix_vente = %s WHERE ID_Produit = %s"
+        mycursor.execute(sql, (nom_produit, prix_vente, id_produit))
+        
+        # Mise à jour des saisons
+        mycursor.execute("DELETE FROM est_de_saison WHERE ID_Produit = %s", (id_produit,))
+        if saisons:
+            sql_saison = "INSERT INTO est_de_saison (ID_Produit, code_saison) VALUES (%s, %s)"
+            for saison in saisons:
+                mycursor.execute(sql_saison, (id_produit, saison))
+        
+        get_db().commit()
+        flash('Produit mis à jour avec succès', 'success')
+        return redirect('/produit')
+        
+    except Exception as e:
+        get_db().rollback()
+        flash(f'Erreur lors de la mise à jour du produit: {str(e)}', 'error')
+        return redirect(f'/produit/edit?id={id_produit}')
 
 @app.route('/marche')
 def marche():
@@ -406,6 +527,98 @@ def to_datetime(date_value):
     if isinstance(date_value, date):
         return datetime.combine(date_value, datetime.min.time())
     return None
+
+@app.route('/produit/delete', methods=['GET'])
+def delete_produit_get():
+    id_produit = request.args.get('id', type=int)
+    
+    if not id_produit:
+        flash('ID produit non spécifié', 'error')
+        return redirect('/produit')
+    
+    mycursor = get_db().cursor()
+    
+    # Récupération du produit et de ses saisons
+    sql = """
+        SELECT p.*, 
+               GROUP_CONCAT(s.libelle_saison) as saisons,
+               GROUP_CONCAT(s.code_saison) as saisons_id
+        FROM Produit p
+        LEFT JOIN est_de_saison eds ON p.ID_Produit = eds.ID_Produit
+        LEFT JOIN Saison s ON eds.code_saison = s.code_saison
+        WHERE p.ID_Produit = %s
+        GROUP BY p.ID_Produit
+    """
+    mycursor.execute(sql, (id_produit,))
+    produit = mycursor.fetchone()
+    
+    if not produit:
+        flash('Produit non trouvé', 'error')
+        return redirect('/produit')
+    
+    return render_template('produit/delete_produit.html', produit=produit)
+
+@app.route('/produit/delete', methods=['POST'])
+def delete_produit_post():
+    mycursor = get_db().cursor()
+    id_produit = request.form.get('id_produit', type=int)
+    
+    if not id_produit:
+        flash('ID produit non spécifié', 'error')
+        return redirect('/produit')
+    
+    try:
+        # Suppression des saisons associées
+        mycursor.execute("DELETE FROM est_de_saison WHERE ID_Produit = %s", (id_produit,))
+        
+        # Vérification des récoltes associées
+        mycursor.execute("SELECT COUNT(*) as count FROM recolte WHERE ID_Produit = %s", (id_produit,))
+        recolte_count = mycursor.fetchone()['count']
+        
+        if recolte_count > 0:
+            flash('Impossible de supprimer ce produit car il est associé à des récoltes', 'error')
+            return redirect('/produit')
+        
+        # Vérification des ventes associées
+        mycursor.execute("SELECT COUNT(*) as count FROM est_vendu WHERE ID_Produit = %s", (id_produit,))
+        vente_count = mycursor.fetchone()['count']
+        
+        if vente_count > 0:
+            flash('Impossible de supprimer ce produit car il est associé à des ventes', 'error')
+            return redirect('/produit')
+        
+        # Suppression du produit
+        mycursor.execute("DELETE FROM Produit WHERE ID_Produit = %s", (id_produit,))
+        get_db().commit()
+        
+        flash('Produit supprimé avec succès', 'success')
+        return redirect('/produit')
+        
+    except Exception as e:
+        get_db().rollback()
+        flash(f'Erreur lors de la suppression du produit: {str(e)}', 'error')
+        return redirect('/produit')
+
+@app.route('/conflicts/produit/<int:id_produit>')
+def produit_conflicts(id_produit):
+    mycursor = get_db().cursor()
+    conflicts = {}
+    
+    # Vérification des récoltes
+    mycursor.execute("SELECT * FROM recolte WHERE ID_Produit = %s", (id_produit,))
+    recoltes = mycursor.fetchall()
+    if recoltes:
+        conflicts['recoltes'] = recoltes
+    
+    # Vérification des ventes
+    mycursor.execute("SELECT * FROM est_vendu WHERE ID_Produit = %s", (id_produit,))
+    ventes = mycursor.fetchall()
+    if ventes:
+        conflicts['ventes'] = ventes
+    
+    return render_template('produit/conflict_produit.html', 
+                         conflicts=conflicts if conflicts else None,
+                         produit_id=id_produit)
 
 if __name__ == '__main__':
     app.run(debug=True)

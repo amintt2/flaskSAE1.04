@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Supprimer un Produit - MiamsBio{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-12">
+    <div class="max-w-3xl mx-auto">
+        <div class="bg-white rounded-xl shadow-2xl p-8 border border-gray-100">
+            <!-- Header -->
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Supprimer un produit</h2>
+                <p class="text-gray-600">Êtes-vous sûr de vouloir supprimer ce produit ?</p>
+            </div>
+
+            <!-- Messages Flash -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="mb-4 p-4 rounded-lg {% if category == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Informations du produit -->
+            <div class="bg-gray-50 rounded-lg p-6 mb-8">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Nom du produit</p>
+                        <p class="mt-1 text-lg font-semibold text-gray-900">{{ produit.nom_produit }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Prix de vente</p>
+                        <p class="mt-1 text-lg font-semibold text-gray-900">{{ "%.2f"|format(produit.prix_vente) }} €/kg</p>
+                    </div>
+                    <div class="col-span-2">
+                        <p class="text-sm font-medium text-gray-500">Saisons</p>
+                        <div class="mt-1">
+                            {% if produit.saisons %}
+                                {% for saison in produit.saisons.split(',') %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-1">
+                                        {{ saison }}
+                                    </span>
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-gray-500">Aucune saison</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Avertissement -->
+            <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-8">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-triangle text-red-400"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-red-700">
+                            Cette action est irréversible. La suppression du produit entraînera également la suppression de toutes les saisons associées.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Boutons -->
+            <div class="flex justify-end space-x-4">
+                <a href="/produit" 
+                   class="px-6 py-3 border-2 border-gray-300 rounded-lg shadow-sm text-base 
+                          font-medium text-gray-700 bg-white hover:bg-gray-50 
+                          transition duration-200 ease-in-out
+                          focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    <i class="fas fa-times mr-2"></i>
+                    Annuler
+                </a>
+                <form action="/produit/delete" method="POST" class="inline">
+                    <input type="hidden" name="id_produit" value="{{ produit.ID_Produit }}">
+                    <button type="submit" 
+                            class="px-6 py-3 border-2 border-transparent rounded-lg shadow-sm text-base 
+                                   font-medium text-white bg-red-600 hover:bg-red-700 
+                                   transition duration-200 ease-in-out
+                                   focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                        <i class="fas fa-trash mr-2"></i>
+                        Confirmer la suppression
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
