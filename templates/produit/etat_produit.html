@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}État des Produits - MiamsBio{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6 text-green-800">État des Produits</h1>
+
+    {% if results %}
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produit</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prix au kg</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantité Totale</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valeur Totale</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Maraichers</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statistiques</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for row in results %}
+                <tr class="hover:bg-gray-50 transition-colors duration-200">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <i class="fas fa-box text-xl text-orange-600 mr-3"></i>
+                            <span class="text-sm font-medium text-gray-900">{{ row.nom_produit }}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <i class="fas fa-tag text-xl text-blue-600 mr-3"></i>
+                            <span class="text-sm font-medium text-gray-900">{{ row.prix_vente }} €/kg</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <i class="fas fa-weight-hanging text-xl text-purple-600 mr-3"></i>
+                            <span class="text-sm font-medium text-gray-900">{{ row.total_quantite }} kg</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <i class="fas fa-euro-sign text-xl text-green-600 mr-3"></i>
+                            <span class="text-sm font-medium text-gray-900">{{ row.valeur_totale }} €</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <i class="fas fa-users text-xl text-indigo-600 mr-3"></i>
+                            <span class="text-sm font-medium text-gray-900">{{ row.nombre_maraichers }}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="space-y-2">
+                            <div class="text-sm">
+                                <span class="font-medium text-gray-500">Moy. par récolte:</span>
+                                <span class="text-gray-900">{{ "%.2f"|format(row.moyenne_quantite_recolte) }} kg</span>
+                            </div>
+                            <div class="text-sm">
+                                <span class="font-medium text-gray-500">Nb récoltes:</span>
+                                <span class="text-gray-900">{{ row.nombre_recoltes }}</span>
+                            </div>
+                            <div class="text-sm">
+                                <span class="font-medium text-gray-500">Nb saisons:</span>
+                                <span class="text-gray-900">{{ row.nombre_saisons }}</span>
+                            </div>
+                            <div class="text-sm">
+                                <span class="font-medium text-gray-500">Part marché:</span>
+                                <span class="text-gray-900">{{ "%.1f"|format(row.part_marche) }}%</span>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="mt-8 bg-green-600 text-white rounded-lg shadow-lg">
+            <div class="px-8 py-6 flex justify-between items-center">
+                <div class="flex items-center">
+                    <i class="fas fa-chart-bar text-3xl mr-4"></i>
+                    <span class="text-2xl font-extrabold">TOTAL GLOBAL</span>
+                </div>
+                <div class="flex items-center space-x-8">
+                    <div>
+                        <span class="text-xl font-bold">{{ results|sum(attribute='total_quantite') }} kg</span>
+                    </div>
+                    <div>
+                        <span class="text-xl font-bold">{{ results|sum(attribute='valeur_totale') }} €</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-12">
+        <div class="text-6xl text-gray-400 mb-4">
+            <i class="fas fa-box-open"></i>
+        </div>
+        <h2 class="text-2xl font-semibold text-gray-600">Aucun produit trouvé</h2>
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 

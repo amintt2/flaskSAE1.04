@@ -459,6 +459,11 @@ def edit_produit_post():
     prix_vente = request.form.get('prix_vente')
     saisons = request.form.getlist('saisons')
     
+    # Vérification qu'au moins une saison est sélectionnée
+    if not saisons:
+        flash('Veuillez sélectionner au moins une saison pour le produit.', 'error')
+        return redirect(f'/produit/edit?id={id_produit}')
+    
     try:
         # Mise à jour du produit
         sql = "UPDATE Produit SET nom_produit = %s, prix_vente = %s WHERE ID_Produit = %s"
@@ -466,10 +471,9 @@ def edit_produit_post():
         
         # Mise à jour des saisons
         mycursor.execute("DELETE FROM est_de_saison WHERE ID_Produit = %s", (id_produit,))
-        if saisons:
-            sql_saison = "INSERT INTO est_de_saison (ID_Produit, code_saison) VALUES (%s, %s)"
-            for saison in saisons:
-                mycursor.execute(sql_saison, (id_produit, saison))
+        sql_saison = "INSERT INTO est_de_saison (ID_Produit, code_saison) VALUES (%s, %s)"
+        for saison in saisons:
+            mycursor.execute(sql_saison, (id_produit, saison))
         
         get_db().commit()
         flash('Produit mis à jour avec succès', 'success')
@@ -515,6 +519,47 @@ def etat_recolte():
                              end_date=end_date)
     
     return render_template('recolte/etat_recolte.html')
+
+@app.route('/etat_produit')
+def etat_produit():
+    mycursor = get_db().cursor()
+    
+    sql = """
+        SELECT 
+            Produit.ID_Produit,
+            Produit.nom_produit,
+            Produit.prix_vente,
+            COALESCE(SUM(recolte.quantite), 0) as total_quantite,
+            COALESCE(SUM(recolte.quantite) * Produit.prix_vente, 0) as valeur_totale,
+            COUNT(DISTINCT recolte.ID_Maraicher) as nombre_maraichers,
+            -- Moyenne de quantité par récolte
+            COALESCE(AVG(recolte.quantite), 0) as moyenne_quantite_recolte,
+            -- Nombre total de récoltes
+            COUNT(recolte.ID_recolte) as nombre_recoltes,
+            -- Nombre de saisons par produit
+            (SELECT COUNT(*) FROM est_de_saison WHERE ID_Produit = Produit.ID_Produit) as nombre_saisons,
+            -- Calcul de la part de marché (en pourcentage du total des récoltes)
+            CASE 
+                WHEN (SELECT SUM(quantite) FROM recolte) > 0 
+                THEN COALESCE((SUM(recolte.quantite) * 100.0 / (SELECT SUM(quantite) FROM recolte)), 0)
+                ELSE 0 
+            END as part_marche,
+            -- Ratio valeur/quantité
+            CASE 
+                WHEN SUM(recolte.quantite) > 0 
+                THEN (SUM(recolte.quantite) * Produit.prix_vente) / SUM(recolte.quantite)
+                ELSE 0 
+            END as ratio_valeur_quantite
+        FROM Produit
+        LEFT JOIN recolte ON Produit.ID_Produit = recolte.ID_Produit
+        GROUP BY Produit.ID_Produit, Produit.nom_produit, Produit.prix_vente
+        ORDER BY valeur_totale DESC
+    """
+    
+    mycursor.execute(sql)
+    results = mycursor.fetchall()
+    
+    return render_template('produit/etat_produit.html', results=results)
 
 @app.template_filter('to_datetime')
 def to_datetime(date_value):
@@ -562,30 +607,36 @@ def delete_produit_get():
 def delete_produit_post():
     mycursor = get_db().cursor()
     id_produit = request.form.get('id_produit', type=int)
+    force = request.form.get('force') == 'true'
     
     if not id_produit:
         flash('ID produit non spécifié', 'error')
         return redirect('/produit')
     
     try:
+        if force:
+            # Suppression forcée : supprimer d'abord les dépendances
+            mycursor.execute("DELETE FROM recolte WHERE ID_Produit = %s", (id_produit,))
+            mycursor.execute("DELETE FROM est_vendu WHERE ID_Produit = %s", (id_produit,))
+            
         # Suppression des saisons associées
         mycursor.execute("DELETE FROM est_de_saison WHERE ID_Produit = %s", (id_produit,))
         
-        # Vérification des récoltes associées
-        mycursor.execute("SELECT COUNT(*) as count FROM recolte WHERE ID_Produit = %s", (id_produit,))
-        recolte_count = mycursor.fetchone()['count']
-        
-        if recolte_count > 0:
-            flash('Impossible de supprimer ce produit car il est associé à des récoltes', 'error')
-            return redirect('/produit')
-        
-        # Vérification des ventes associées
-        mycursor.execute("SELECT COUNT(*) as count FROM est_vendu WHERE ID_Produit = %s", (id_produit,))
-        vente_count = mycursor.fetchone()['count']
-        
-        if vente_count > 0:
-            flash('Impossible de supprimer ce produit car il est associé à des ventes', 'error')
-            return redirect('/produit')
+        # Vérification des récoltes et ventes associées seulement si ce n'est pas une suppression forcée
+        if not force:
+            mycursor.execute("SELECT COUNT(*) as count FROM recolte WHERE ID_Produit = %s", (id_produit,))
+            recolte_count = mycursor.fetchone()['count']
+            
+            if recolte_count > 0:
+                flash('Impossible de supprimer ce produit car il est associé à des récoltes', 'error')
+                return redirect('/produit')
+            
+            mycursor.execute("SELECT COUNT(*) as count FROM est_vendu WHERE ID_Produit = %s", (id_produit,))
+            vente_count = mycursor.fetchone()['count']
+            
+            if vente_count > 0:
+                flash('Impossible de supprimer ce produit car il est associé à des ventes', 'error')
+                return redirect('/produit')
         
         # Suppression du produit
         mycursor.execute("DELETE FROM Produit WHERE ID_Produit = %s", (id_produit,))

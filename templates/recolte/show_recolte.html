@@ -67,22 +67,20 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div class="flex justify-end items-center space-x-6">
+                            <a href="{{ url_for('show_recolte_conflicts', recolte_id=recolte.ID_recolte) }}" 
+                               class="text-red-600 hover:text-red-900">
+                                <div class="flex items-center gap-1">
+                                    <i class="fas fa-trash text-lg"></i>
+                                    <span>Supprimer</span>
+                                </div>
+                            </a>
                             <a href="/recolte/edit?id={{ recolte.ID_recolte }}" 
                                class="text-green-500 hover:text-green-700 transition-colors duration-200">
                                 <div class="flex items-center gap-1">
-                                    <i class="fas fa-edit text-lg"></i>
+                                    <i class="fas fa-edit text-lg"> </i>
                                     <span>Modifier</span>
                                 </div>
                             </a>
-                            <form action="/recolte/delete" method="POST" class="inline">
-                                <input type="hidden" name="ID_recolte" value="{{ recolte.ID_recolte }}">
-                                <button type="submit" class="text-red-500 hover:text-red-700 transition-colors duration-200">
-                                    <div class="flex items-center gap-1">
-                                        <i class="fas fa-trash text-lg"></i>
-                                        <span>Supprimer</span>
-                                    </div>
-                                </button>
-                            </form>
                         </div>
                     </td>
                 </tr>
