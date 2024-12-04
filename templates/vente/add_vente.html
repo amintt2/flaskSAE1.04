@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Nouvelle Vente</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form action="{{ url_for('add_vente_post') }}" method="POST" id="venteForm">
+        <div class="mb-3">
+            <label for="ID_Marche" class="form-label">Marché</label>
+            <select class="form-select" name="ID_Marche" required>
+                <option value="">Sélectionnez un marché</option>
+                {% for marche in marches %}
+                    <option value="{{ marche.ID_Marche }}">{{ marche.Nom }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="Date_Vente" class="form-label">Date de la vente</label>
+            <input type="date" class="form-control" name="Date_Vente" required
+                   value="{{ today_date }}" min="{{ today_date }}">
+        </div>
+
+        <div id="produits-container">
+            <h4>Produits à vendre</h4>
+            <div class="produit-entry mb-3">
+                <div class="row">
+                    <div class="col-md-6">
+                        <select class="form-select" name="produits[]" required>
+                            <option value="">Sélectionnez un produit</option>
+                            {% for produit in produits %}
+                                <option value="{{ produit.ID_Produit }}" 
+                                        data-prix="{{ produit.prix_vente }}"
+                                        data-stock="{{ produit.quantite_disponible }}">
+                                    {{ produit.nom_produit }} (Stock: {{ produit.quantite_disponible }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <input type="number" class="form-control" name="quantites[]" 
+                               placeholder="Quantité" min="1" required>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-danger remove-produit">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="button" class="btn btn-secondary mb-3" id="add-produit">
+            <i class="fas fa-plus"></i> Ajouter un produit
+        </button>
+
+        <div class="mb-3">
+            <button type="submit" class="btn btn-primary">Enregistrer la vente</button>
+            <a href="{{ url_for('vente') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Retour aux ventes
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+document.getElementById('add-produit').addEventListener('click', function() {
+    const container = document.getElementById('produits-container');
+    const template = document.querySelector('.produit-entry').cloneNode(true);
+    
+    // Réinitialiser les valeurs
+    template.querySelector('select').value = '';
+    template.querySelector('input[type="number"]').value = '';
+    
+    // Ajouter les événements
+    template.querySelector('.remove-produit').addEventListener('click', function() {
+        this.closest('.produit-entry').remove();
+    });
+    
+    container.appendChild(template);
+});
+
+// Validation des quantités par rapport au stock disponible
+document.getElementById('venteForm').addEventListener('submit', function(e) {
+    const selects = document.querySelectorAll('select[name="produits[]"]');
+    const quantities = document.querySelectorAll('input[name="quantites[]"]');
+    
+    for (let i = 0; i < selects.length; i++) {
+        const option = selects[i].selectedOptions[0];
+        const stock = parseInt(option.dataset.stock);
+        const quantity = parseInt(quantities[i].value);
+        
+        if (quantity > stock) {
+            e.preventDefault();
+            alert(`Stock insuffisant pour ${option.text}. Stock disponible: ${stock}`);
+            return;
+        }
+    }
+});
+</script>
+{% endblock %}

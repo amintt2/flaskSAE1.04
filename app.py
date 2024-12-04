@@ -969,7 +969,338 @@ def etat_marche():
     
     return render_template('marche/etat_marche.html')
 
+@app.route('/vente/add', methods=['GET'])
+def add_vente_get():
+    mycursor = get_db().cursor()
+    
+    # Récupération des marchés
+    mycursor.execute("SELECT ID_Marche, nom_mache as Nom FROM Marche")
+    marches = mycursor.fetchall()
+    
+    # Récupération des produits avec leur stock disponible
+    sql_produits = """
+        SELECT 
+            p.ID_Produit,
+            p.nom_produit,
+            p.prix_vente,
+            (
+                COALESCE((SELECT SUM(r.quantite) FROM recolte r WHERE r.ID_Produit = p.ID_Produit), 0) -
+                COALESCE((SELECT SUM(ev.quantite) FROM est_vendu ev WHERE ev.ID_Produit = p.ID_Produit), 0)
+            ) as quantite_disponible
+        FROM Produit p
+        HAVING quantite_disponible > 0
+        ORDER BY p.nom_produit
+    """
+    mycursor.execute(sql_produits)
+    produits = mycursor.fetchall()
+    
+    # Date du jour pour le champ date
+    today_date = datetime.now().strftime('%Y-%m-%d')
+    
+    return render_template('vente/add_vente.html',
+                         marches=marches,
+                         produits=produits,
+                         today_date=today_date)
 
+@app.route('/vente/add', methods=['POST'])
+def add_vente_post():
+    mycursor = get_db().cursor()
+    
+    try:
+        # Récupération des données du formulaire
+        id_marche = request.form.get('ID_Marche')
+        date_vente = request.form.get('Date_Vente')
+        produits = request.form.getlist('produits[]')
+        quantites = request.form.getlist('quantites[]')
+        
+        # Vérification des stocks disponibles
+        for i in range(len(produits)):
+            if quantites[i] and int(quantites[i]) > 0:
+                sql_stock = """
+                    SELECT 
+                        (SELECT COALESCE(SUM(r.quantite), 0) 
+                         FROM recolte r 
+                         WHERE r.ID_Produit = %s) -
+                        (SELECT COALESCE(SUM(ev.quantite), 0) 
+                         FROM est_vendu ev 
+                         WHERE ev.ID_Produit = %s) 
+                    as stock_disponible,
+                    (SELECT nom_produit FROM Produit WHERE ID_Produit = %s) as nom_produit
+                """
+                mycursor.execute(sql_stock, (produits[i], produits[i], produits[i]))
+                result = mycursor.fetchone()
+                stock = result['stock_disponible']
+                nom_produit = result['nom_produit']
+                
+                if int(quantites[i]) > stock:
+                    raise Exception(f"Stock insuffisant pour {nom_produit} (disponible: {stock}, demandé: {quantites[i]})")
+        
+        # Insertion de la vente
+        sql_vente = """
+            INSERT INTO Vente (Date_Vente, ID_Marche, ID_Maraicher, prix_emplacement) 
+            VALUES (%s, %s, %s, %s)
+        """
+        mycursor.execute(sql_vente, (date_vente, id_marche, 1, 50))
+        id_vente = mycursor.lastrowid
+        
+        # Insertion des produits vendus
+        for i in range(len(produits)):
+            if quantites[i] and int(quantites[i]) > 0:
+                sql_est_vendu = """
+                    INSERT INTO est_vendu (quantite, prix, ID_Vente, ID_Produit)
+                    VALUES (%s, %s, %s, %s)
+                """
+                mycursor.execute("SELECT prix_vente FROM Produit WHERE ID_Produit = %s", (produits[i],))
+                prix_produit = mycursor.fetchone()['prix_vente']
+                prix_total = int(quantites[i]) * prix_produit
+                
+                mycursor.execute(sql_est_vendu, (quantites[i], prix_total, id_vente, produits[i]))
+        
+        get_db().commit()
+        flash('Vente ajoutée avec succès', 'success')
+        return redirect('/vente')
+        
+    except Exception as e:
+        get_db().rollback()
+        flash(f'Erreur lors de l\'ajout de la vente: {str(e)}', 'error')
+        return redirect('/vente/add')
+
+@app.route('/etat_vente')
+def etat_vente():
+    mycursor = get_db().cursor()
+    
+    sql = """
+        SELECT 
+            m.nom_mache as nom_marche,
+            p.nom_produit,
+            SUM(ev.quantite) as quantite_totale,
+            p.prix_vente,
+            SUM(ev.quantite * p.prix_vente) as montant_total,
+            COUNT(DISTINCT v.ID_Vente) as nombre_ventes
+        FROM Vente v
+        JOIN Marche m ON v.ID_Marche = m.ID_Marche
+        JOIN est_vendu ev ON v.ID_Vente = ev.ID_Vente
+        JOIN Produit p ON ev.ID_Produit = p.ID_Produit
+        GROUP BY m.ID_Marche, p.ID_Produit, m.nom_mache, p.nom_produit, p.prix_vente
+        ORDER BY montant_total DESC
+    """
+    
+    mycursor.execute(sql)
+    resultats = mycursor.fetchall()
+    
+    return render_template('vente/etat_vente.html', resultats=resultats)
+
+@app.route('/vente/delete', methods=['POST'])
+def delete_vente():
+    mycursor = get_db().cursor()
+    id_vente = request.form.get('ID_Vente')
+    
+    try:
+        # Récupérer les produits vendus avant la suppression
+        sql_get_produits = """
+            SELECT ID_Produit, quantite 
+            FROM est_vendu 
+            WHERE ID_Vente = %s
+        """
+        mycursor.execute(sql_get_produits, (id_vente,))
+        produits_vendus = mycursor.fetchall()
+        
+        # Supprimer d'abord les enregistrements dans est_vendu
+        sql_delete_est_vendu = "DELETE FROM est_vendu WHERE ID_Vente = %s"
+        mycursor.execute(sql_delete_est_vendu, (id_vente,))
+        
+        # Ensuite supprimer la vente
+        sql_delete_vente = "DELETE FROM Vente WHERE ID_Vente = %s"
+        mycursor.execute(sql_delete_vente, (id_vente,))
+        
+        get_db().commit()
+        flash('Vente supprimée avec succès', 'success')
+        
+    except Exception as e:
+        get_db().rollback()
+        flash(f'Erreur lors de la suppression de la vente: {str(e)}', 'error')
+    
+    return redirect('/vente')
+
+@app.route('/vente')
+def show_ventes():
+    mycursor = get_db().cursor()
+    
+    sql = """
+        SELECT 
+            v.ID_Vente,
+            v.Date_Vente,
+            m.nom_mache as nom_marche,
+            GROUP_CONCAT(
+                CONCAT(p.nom_produit, ' (', ev.quantite, ' unités)') 
+                SEPARATOR ', '
+            ) as produits,
+            SUM(ev.quantite * p.prix_vente) as total
+        FROM Vente v
+        JOIN Marche m ON v.ID_Marche = m.ID_Marche
+        JOIN est_vendu ev ON v.ID_Vente = ev.ID_Vente
+        JOIN Produit p ON ev.ID_Produit = p.ID_Produit
+        GROUP BY v.ID_Vente, v.Date_Vente, m.nom_mache
+        ORDER BY v.Date_Vente DESC
+    """
+    
+    mycursor.execute(sql)
+    ventes = mycursor.fetchall()
+    
+    return render_template('vente/show_vente.html', ventes=ventes)
+
+@app.route('/vente/edit', methods=['GET'])
+def edit_vente():
+    mycursor = get_db().cursor()
+    id_vente = request.args.get('id', type=int)
+    
+    if not id_vente:
+        flash('ID vente non spécifié', 'error')
+        return redirect('/vente')
+    
+    # Récupération des marchés
+    mycursor.execute("SELECT ID_Marche, nom_mache as Nom FROM Marche")
+    marches = mycursor.fetchall()
+    
+    # Récupération des informations de la vente
+    sql_vente = """
+        SELECT v.*, m.nom_mache as nom_marche
+        FROM Vente v
+        JOIN Marche m ON v.ID_Marche = m.ID_Marche
+        WHERE v.ID_Vente = %s
+    """
+    mycursor.execute(sql_vente, (id_vente,))
+    vente = mycursor.fetchone()
+    
+    if not vente:
+        flash('Vente non trouvée', 'error')
+        return redirect('/vente')
+    
+    # Récupération des produits vendus
+    sql_produits_vendus = """
+        SELECT ev.*, p.nom_produit, p.prix_vente
+        FROM est_vendu ev
+        JOIN Produit p ON ev.ID_Produit = p.ID_Produit
+        WHERE ev.ID_Vente = %s
+    """
+    mycursor.execute(sql_produits_vendus, (id_vente,))
+    produits_vendus = mycursor.fetchall()
+    
+    # Récupération de tous les produits avec leur stock disponible
+    sql_produits = """
+        SELECT 
+            p.ID_Produit,
+            p.nom_produit,
+            p.prix_vente,
+            (
+                COALESCE((SELECT SUM(r.quantite) FROM recolte r WHERE r.ID_Produit = p.ID_Produit), 0) -
+                COALESCE((SELECT SUM(ev.quantite) FROM est_vendu ev WHERE ev.ID_Produit = p.ID_Produit), 0)
+            ) + COALESCE((
+                SELECT ev2.quantite 
+                FROM est_vendu ev2 
+                WHERE ev2.ID_Produit = p.ID_Produit 
+                AND ev2.ID_Vente = %s
+            ), 0) as quantite_disponible
+        FROM Produit p
+        HAVING quantite_disponible > 0
+        ORDER BY p.nom_produit
+    """
+    mycursor.execute(sql_produits, (id_vente,))
+    produits = mycursor.fetchall()
+    
+    return render_template('vente/edit_vente.html',
+                         vente=vente,
+                         marches=marches,
+                         produits=produits,
+                         produits_vendus=produits_vendus)
+
+@app.route('/vente/edit', methods=['POST'])
+def edit_vente_post():
+    mycursor = get_db().cursor()
+    
+    try:
+        id_vente = request.form.get('ID_Vente')
+        id_marche = request.form.get('ID_Marche')
+        date_vente = request.form.get('Date_Vente')
+        produits = request.form.getlist('produits[]')
+        quantites = request.form.getlist('quantites[]')
+        
+        # Vérification des stocks disponibles
+        for i in range(len(produits)):
+            if quantites[i] and int(quantites[i]) > 0:
+                sql_stock = """
+                    SELECT 
+                        (
+                            (SELECT COALESCE(SUM(r.quantite), 0) FROM recolte r WHERE r.ID_Produit = %s) -
+                            (SELECT COALESCE(SUM(ev.quantite), 0) FROM est_vendu ev 
+                             WHERE ev.ID_Produit = %s AND ev.ID_Vente != %s)
+                        ) as stock_disponible,
+                        (SELECT nom_produit FROM Produit WHERE ID_Produit = %s) as nom_produit
+                """
+                mycursor.execute(sql_stock, (produits[i], produits[i], id_vente, produits[i]))
+                result = mycursor.fetchone()
+                stock = result['stock_disponible']
+                nom_produit = result['nom_produit']
+                
+                if int(quantites[i]) > stock:
+                    raise Exception(f"Stock insuffisant pour {nom_produit} (disponible: {stock}, demandé: {quantites[i]})")
+        
+        # Mise à jour de la vente
+        sql_update_vente = """
+            UPDATE Vente 
+            SET Date_Vente = %s, ID_Marche = %s
+            WHERE ID_Vente = %s
+        """
+        mycursor.execute(sql_update_vente, (date_vente, id_marche, id_vente))
+        
+        # Suppression des anciens produits vendus
+        mycursor.execute("DELETE FROM est_vendu WHERE ID_Vente = %s", (id_vente,))
+        
+        # Insertion des nouveaux produits vendus
+        for i in range(len(produits)):
+            if quantites[i] and int(quantites[i]) > 0:
+                sql_est_vendu = """
+                    INSERT INTO est_vendu (quantite, prix, ID_Vente, ID_Produit)
+                    VALUES (%s, %s, %s, %s)
+                """
+                mycursor.execute("SELECT prix_vente FROM Produit WHERE ID_Produit = %s", (produits[i],))
+                prix_produit = mycursor.fetchone()['prix_vente']
+                prix_total = int(quantites[i]) * prix_produit
+                
+                mycursor.execute(sql_est_vendu, (quantites[i], prix_total, id_vente, produits[i]))
+        
+        get_db().commit()
+        flash('Vente mise à jour avec succès', 'success')
+        return redirect('/vente')
+        
+    except Exception as e:
+        get_db().rollback()
+        flash(f'Erreur lors de la modification de la vente: {str(e)}', 'error')
+        return redirect(f'/vente/edit?id={id_vente}')
+
+@app.route('/vente/manage')
+def manage_ventes():
+    mycursor = get_db().cursor()
+    
+    sql = """
+        SELECT 
+            v.ID_Vente,
+            v.Date_Vente,
+            m.nom_mache as nom_marche,
+            GROUP_CONCAT(CONCAT(p.nom_produit, ' (', ev.quantite, ')') SEPARATOR ', ') as produits,
+            SUM(ev.prix) as total
+        FROM Vente v
+        JOIN Marche m ON v.ID_Marche = m.ID_Marche
+        JOIN est_vendu ev ON v.ID_Vente = ev.ID_Vente
+        JOIN Produit p ON ev.ID_Produit = p.ID_Produit
+        GROUP BY v.ID_Vente, v.Date_Vente, m.nom_mache
+        ORDER BY v.Date_Vente DESC
+    """
+    
+    mycursor.execute(sql)
+    ventes = mycursor.fetchall()
+    
+    return render_template('vente/manage_ventes.html', ventes=ventes)
 
 
 
