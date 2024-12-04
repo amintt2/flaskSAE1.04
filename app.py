@@ -486,8 +486,231 @@ def edit_produit_post():
         return redirect(f'/produit/edit?id={id_produit}')
 
 @app.route('/marche')
-def marche():
-    return render_template('marche/show_marche.html')
+def show_marches():
+    mycursor = get_db().cursor()
+    sql = """
+        SELECT m.ID_Marche, m.nom_mache as Nom_Marche, l.nom as Adresse,
+               CASE DAYOFWEEK(m.date_march)
+                   WHEN 1 THEN 'Dimanche'
+                   WHEN 2 THEN 'Lundi'
+                   WHEN 3 THEN 'Mardi'
+                   WHEN 4 THEN 'Mercredi'
+                   WHEN 5 THEN 'Jeudi'
+                   WHEN 6 THEN 'Vendredi'
+                   WHEN 7 THEN 'Samedi'
+               END as Jour_Marche,
+               m.nombre_standes
+        FROM Marche m
+        JOIN LieuMarche l ON m.code_lieu = l.code_lieu
+        ORDER BY m.nom_mache
+    """
+    mycursor.execute(sql)
+    marches = mycursor.fetchall()
+    return render_template('marche/show_marche.html', marches=marches)
+
+@app.route('/marche/add', methods=['GET'])
+def add_marche_get():
+    mycursor = get_db().cursor()
+    
+    # Récupérer les valeurs par défaut depuis la requête
+    nom_marche = request.args.get('nom_marche', '')
+    code_lieu = request.args.get('code_lieu', '')
+    nombre_stands = request.args.get('nombre_stands', '')
+    
+    # Récupérer la liste des lieux de marché
+    sql = "SELECT * FROM LieuMarche ORDER BY nom"
+    mycursor.execute(sql)
+    lieux = mycursor.fetchall()
+    
+    return render_template('marche/add_marche.html', 
+                         lieux=lieux,
+                         nom_marche=nom_marche,
+                         code_lieu=code_lieu,
+                         nombre_stands=nombre_stands)
+
+@app.route('/marche/add', methods=['POST'])
+def add_marche_post():
+    mycursor = get_db().cursor()
+    nom_marche = request.form.get('nom_marche')
+    code_lieu = request.form.get('code_lieu')
+    nombre_stands = request.form.get('nombre_stands', 0)
+    jour_marche = request.form.get('jour_marche')
+
+    try:
+        # Vérifier si un marché existe déjà avec le même nom
+        sql_check = "SELECT * FROM Marche WHERE nom_mache = %s"
+        mycursor.execute(sql_check, (nom_marche,))
+        if mycursor.fetchone():
+            flash('Un marché avec ce nom existe déjà', 'error')
+            return redirect('/marche/add')
+
+        # Vérifier si le lieu existe
+        sql_check_lieu = "SELECT * FROM LieuMarche WHERE code_lieu = %s"
+        mycursor.execute(sql_check_lieu, (code_lieu,))
+        if not mycursor.fetchone():
+            flash('Le lieu sélectionné n\'existe pas', 'error')
+            return redirect('/marche/add')
+
+        # Générer un nouvel ID_Marche
+        sql_max_id = "SELECT MAX(ID_Marche) as max_id FROM Marche"
+        mycursor.execute(sql_max_id)
+        result = mycursor.fetchone()
+        new_id = 1 if result['max_id'] is None else result['max_id'] + 1
+
+        # Calculer la date du marché en fonction du jour sélectionné
+        sql = """
+            INSERT INTO Marche (ID_Marche, nom_mache, date_march, nombre_standes, code_lieu)
+            VALUES (%s, %s, DATE_ADD(CURDATE(), 
+                   INTERVAL ((%s - DAYOFWEEK(CURDATE()) + 7) MOD 7) DAY), 
+                   %s, %s)
+        """
+        mycursor.execute(sql, (new_id, nom_marche, jour_marche, nombre_stands, code_lieu))
+        get_db().commit()
+        flash('Marché ajouté avec succès', 'success')
+        return redirect('/marche')
+    except Exception as e:
+        flash(f'Erreur lors de l\'ajout du marché: {str(e)}', 'error')
+        return redirect('/marche/add')
+
+@app.route('/marche/edit/<int:id_marche>', methods=['GET'])
+def edit_marche_get(id_marche):
+    mycursor = get_db().cursor()
+    
+    # Récupérer les informations complètes du marché
+    sql = """
+        SELECT m.*, l.nom as lieu_nom, l.code_lieu
+        FROM Marche m
+        JOIN LieuMarche l ON m.code_lieu = l.code_lieu
+        WHERE m.ID_Marche = %s
+    """
+    mycursor.execute(sql, (id_marche,))
+    marche = mycursor.fetchone()
+    
+    if not marche:
+        flash('Marché non trouvé', 'error')
+        return redirect('/marche')
+
+    # Récupérer la liste des lieux de marché
+    sql = "SELECT * FROM LieuMarche ORDER BY nom"
+    mycursor.execute(sql)
+    lieux = mycursor.fetchall()
+
+    return render_template('marche/edit_marche.html', 
+                         marche=marche,
+                         lieux=lieux)
+
+@app.route('/marche/edit', methods=['POST'])
+def edit_marche_post():
+    mycursor = get_db().cursor()
+    id_marche = request.form.get('id_marche')
+    nom_marche = request.form.get('nom_marche')
+    code_lieu = request.form.get('code_lieu')
+    nombre_stands = request.form.get('nombre_stands', 0)
+    jour_marche = request.form.get('jour_marche')
+
+    try:
+        # Vérifier si un autre marché existe avec le même nom
+        sql_check = "SELECT * FROM Marche WHERE nom_mache = %s AND ID_Marche != %s"
+        mycursor.execute(sql_check, (nom_marche, id_marche))
+        if mycursor.fetchone():
+            flash('Un autre marché avec ce nom existe déjà', 'error')
+            return redirect(f'/marche/edit/{id_marche}')
+
+        # Mettre à jour le marché avec le nouveau jour
+        sql = """
+            UPDATE Marche 
+            SET nom_mache = %s, 
+                nombre_standes = %s, 
+                code_lieu = %s,
+                date_march = DATE_ADD(CURDATE(), 
+                    INTERVAL ((%s - DAYOFWEEK(CURDATE()) + 7) MOD 7) DAY)
+            WHERE ID_Marche = %s
+        """
+        mycursor.execute(sql, (nom_marche, nombre_stands, code_lieu, jour_marche, id_marche))
+        get_db().commit()
+        flash('Marché modifié avec succès', 'success')
+        return redirect('/marche')
+    except Exception as e:
+        flash(f'Erreur lors de la modification du marché: {str(e)}', 'error')
+        return redirect(f'/marche/edit/{id_marche}')
+
+@app.route('/marche/delete/<int:id_marche>', methods=['GET'])
+def delete_marche_get(id_marche):
+    mycursor = get_db().cursor()
+    # Récupérer les informations du marché
+    sql = """
+        SELECT m.ID_Marche, m.nom_mache, l.nom as Adresse,
+               CASE DAYOFWEEK(m.date_march)
+                   WHEN 1 THEN 'Dimanche'
+                   WHEN 2 THEN 'Lundi'
+                   WHEN 3 THEN 'Mardi'
+                   WHEN 4 THEN 'Mercredi'
+                   WHEN 5 THEN 'Jeudi'
+                   WHEN 6 THEN 'Vendredi'
+                   WHEN 7 THEN 'Samedi'
+               END as Jour_Marche
+        FROM Marche m
+        JOIN LieuMarche l ON m.code_lieu = l.code_lieu
+        WHERE m.ID_Marche = %s
+    """
+    mycursor.execute(sql, (id_marche,))
+    marche = mycursor.fetchone()
+    
+    if not marche:
+        flash('Marché non trouvé', 'error')
+        return redirect('/marche')
+
+    return render_template('marche/delete_marche.html', marche=marche)
+
+@app.route('/marche/delete', methods=['POST'])
+def delete_marche_post():
+    mycursor = get_db().cursor()
+    id_marche = request.form.get('id_marche')
+    force_delete = request.form.get('force_delete') == 'on'
+
+    try:
+        # Vérifier s'il y a des ventes associées
+        sql_check_ventes = "SELECT COUNT(*) as count FROM Vente WHERE ID_Marche = %s"
+        mycursor.execute(sql_check_ventes, (id_marche,))
+        ventes_count = mycursor.fetchone()['count']
+
+        if ventes_count > 0 and not force_delete:
+            flash(f'Ce marché a {ventes_count} vente(s) associée(s). Cochez "Forcer la suppression" pour supprimer le marché et toutes ses ventes.', 'error')
+            return redirect(f'/marche/delete/{id_marche}')
+
+        # Si force_delete est activé ou s'il n'y a pas de ventes, procéder à la suppression
+        if force_delete:
+            # Supprimer d'abord les ventes associées et leurs produits vendus
+            sql_get_ventes = "SELECT ID_Vente FROM Vente WHERE ID_Marche = %s"
+            mycursor.execute(sql_get_ventes, (id_marche,))
+            ventes = mycursor.fetchall()
+            
+            for vente in ventes:
+                # Supprimer les produits vendus pour chaque vente
+                sql_delete_est_vendu = "DELETE FROM est_vendu WHERE ID_Vente = %s"
+                mycursor.execute(sql_delete_est_vendu, (vente['ID_Vente'],))
+            
+            # Supprimer les ventes
+            sql_delete_ventes = "DELETE FROM Vente WHERE ID_Marche = %s"
+            mycursor.execute(sql_delete_ventes, (id_marche,))
+
+        # Supprimer les relations est_dans
+        sql_delete_est_dans = "DELETE FROM est_dans WHERE ID_Marche = %s"
+        mycursor.execute(sql_delete_est_dans, (id_marche,))
+
+        # Supprimer le marché
+        sql = "DELETE FROM Marche WHERE ID_Marche = %s"
+        mycursor.execute(sql, (id_marche,))
+        
+        get_db().commit()
+        flash('Marché supprimé avec succès', 'success')
+        return redirect('/marche')
+    except Exception as e:
+        get_db().rollback()
+        flash(f'Erreur lors de la suppression du marché: {str(e)}', 'error')
+        return redirect(f'/marche/delete/{id_marche}')
+
+
 
 @app.route('/etat_recolte', methods=['GET', 'POST'])
 def etat_recolte():
@@ -691,6 +914,65 @@ def produit_conflicts(id_produit):
     return render_template('produit/conflict_produit.html', 
                          conflicts=conflicts if conflicts else None,
                          produit_id=id_produit)
+
+@app.route('/etat_marche', methods=['GET', 'POST'])
+def etat_marche():
+    if request.method == 'POST':
+        jours_selectionnes = request.form.getlist('jours[]')
+        
+        if not jours_selectionnes:
+            flash('Veuillez sélectionner au moins un jour', 'error')
+            return redirect('/etat_marche')
+            
+        mycursor = get_db().cursor()
+        
+        jours_mapping = {
+            'Dimanche': 1, 'Lundi': 2, 'Mardi': 3, 'Mercredi': 4,
+            'Jeudi': 5, 'Vendredi': 6, 'Samedi': 7
+        }
+        jours_numeriques = [jours_mapping[jour] for jour in jours_selectionnes]
+        jours_clause = "DAYOFWEEK(m.date_march) IN ({})".format(
+            ','.join(['%s'] * len(jours_numeriques))
+        )
+        
+        sql = f"""
+            SELECT 
+                m.nom_mache,
+                CASE DAYOFWEEK(m.date_march)
+                    WHEN 1 THEN 'Dimanche'
+                    WHEN 2 THEN 'Lundi'
+                    WHEN 3 THEN 'Mardi'
+                    WHEN 4 THEN 'Mercredi'
+                    WHEN 5 THEN 'Jeudi'
+                    WHEN 6 THEN 'Vendredi'
+                    WHEN 7 THEN 'Samedi'
+                END as jour_marche,
+                m.nombre_standes
+            FROM Marche m
+            WHERE {jours_clause}
+            GROUP BY m.ID_Marche, m.nom_mache, m.date_march
+            ORDER BY m.nom_mache
+        """
+        
+        mycursor.execute(sql, jours_numeriques)
+        results = mycursor.fetchall()
+        
+        total_stats = {
+            'total_marches': len(results),
+            'total_capacite': sum(r['nombre_standes'] for r in results),
+            'jours_selectionnes': jours_selectionnes
+        }
+        
+        return render_template('marche/etat_marche.html', 
+                             results=results,
+                             total_stats=total_stats)
+    
+    return render_template('marche/etat_marche.html')
+
+
+
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)

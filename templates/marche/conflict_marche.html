@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Conflit de Modification - MiamsBio{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-12">
+    <div class="max-w-3xl mx-auto">
+        <div class="bg-white rounded-xl shadow-2xl p-8 border border-gray-100">
+            <!-- Header -->
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Conflit de modification</h2>
+                <p class="text-gray-600">Ce marché a été modifié par un autre utilisateur pendant que vous le modifiez</p>
+            </div>
+
+            <!-- Messages Flash -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="mb-4 p-4 rounded-lg {% if category == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Comparaison des versions -->
+            <div class="space-y-8">
+                <div class="grid grid-cols-2 gap-8">
+                    <!-- Version actuelle -->
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Version actuelle</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Nom du marché</p>
+                                <p class="mt-1 text-lg font-semibold text-gray-900">{{ current_version.Nom_Marche }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Adresse</p>
+                                <p class="mt-1 text-lg font-semibold text-gray-900">{{ current_version.Adresse_Marche }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Jour du marché</p>
+                                <p class="mt-1 text-lg font-semibold text-gray-900">{{ current_version.Jour_Marche }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Votre version -->
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Votre version</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Nom du marché</p>
+                                <p class="mt-1 text-lg font-semibold text-gray-900">{{ your_version.Nom_Marche }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Adresse</p>
+                                <p class="mt-1 text-lg font-semibold text-gray-900">{{ your_version.Adresse_Marche }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Jour du marché</p>
+                                <p class="mt-1 text-lg font-semibold text-gray-900">{{ your_version.Jour_Marche }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex justify-end space-x-4 pt-6">
+                    <a href="/marche" 
+                       class="px-6 py-3 border-2 border-gray-300 rounded-lg shadow-sm text-base 
+                              font-medium text-gray-700 bg-white hover:bg-gray-50 
+                              transition duration-200 ease-in-out
+                              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        <i class="fas fa-times mr-2"></i>
+                        Annuler
+                    </a>
+                    <form action="/marche/resolve_conflict" method="post" class="inline">
+                        <input type="hidden" name="id_marche" value="{{ your_version.ID_Marche }}">
+                        <input type="hidden" name="version" value="current">
+                        <button type="submit" 
+                                class="px-6 py-3 border-2 border-transparent rounded-lg shadow-sm text-base 
+                                       font-medium text-white bg-yellow-600 hover:bg-yellow-700 
+                                       transition duration-200 ease-in-out
+                                       focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 mr-4">
+                            <i class="fas fa-check mr-2"></i>
+                            Garder la version actuelle
+                        </button>
+                    </form>
+                    <form action="/marche/resolve_conflict" method="post" class="inline">
+                        <input type="hidden" name="id_marche" value="{{ your_version.ID_Marche }}">
+                        <input type="hidden" name="version" value="your">
+                        <button type="submit" 
+                                class="px-6 py-3 border-2 border-transparent rounded-lg shadow-sm text-base 
+                                       font-medium text-white bg-green-600 hover:bg-green-700 
+                                       transition duration-200 ease-in-out
+                                       focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                            <i class="fas fa-save mr-2"></i>
+                            Utiliser ma version
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
