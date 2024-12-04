@@ -3,6 +3,7 @@
 from flask import Flask, request, render_template, redirect, flash
 import time
 from datetime import date, timedelta, datetime
+import math
 
 app = Flask(__name__)
 app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -510,11 +511,28 @@ def etat_recolte():
             ORDER BY Maraicher.Nom, Maraicher.Prenom, Produit.nom_produit
         """
         
+        sql_participation = """
+            SELECT 
+                Maraicher.Nom,
+                Maraicher.Prenom,
+                SUM(recolte.quantite) as total_quantite,
+                (SUM(recolte.quantite) * 100.0 / (SELECT SUM(quantite) FROM recolte WHERE Date_Debut BETWEEN %s AND %s)) as participation_percentage
+            FROM recolte
+            JOIN Maraicher ON recolte.ID_Maraicher = Maraicher.ID_Maraicher
+            WHERE recolte.Date_Debut BETWEEN %s AND %s
+            GROUP BY Maraicher.ID_Maraicher, Maraicher.Nom, Maraicher.Prenom
+            ORDER BY participation_percentage DESC
+        """
+        
         mycursor.execute(sql, (start_date, end_date))
         results = mycursor.fetchall()
         
+        mycursor.execute(sql_participation, (start_date, end_date, start_date, end_date))
+        participation_data = mycursor.fetchall()
+        
         return render_template('recolte/etat_recolte.html', 
                              results=results,
+                             participation_data=participation_data,
                              start_date=start_date,
                              end_date=end_date)
     
