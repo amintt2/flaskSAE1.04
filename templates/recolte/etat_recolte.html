@@ -184,59 +184,22 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const ctx = document.getElementById('participationChart').getContext('2d');
-        
-        const data = {
-            labels: [
-                {% for data in participation_data %}
-                    '{{ data.Nom }} {{ data.Prenom }}',
-                {% endfor %}
-            ],
-            datasets: [{
-                data: [
-                    {% for data in participation_data %}
-                        {{ data.total_quantite }},
-                    {% endfor %}
-                ],
-                backgroundColor: [
-                    '#34D399', '#10B981', '#059669', '#047857', '#065F46',
-                    '#047C4F', '#06845A', '#089F6B', '#0AB982', '#0CD398'
-                ],
-                borderWidth: 1
-            }]
-        };
-
-        new Chart(ctx, {
-            type: 'pie',
-            data: data,
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'right',
-                        labels: {
-                            font: {
-                                size: 12
-                            }
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = ((context.raw / total) * 100).toFixed(1);
-                                return `${context.label}: ${context.raw}kg (${percentage}%)`;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    });
+    const participationData = {
+        labels: [
+            {% for data in participation_data %}
+                "{{ data.Nom }} {{ data.Prenom }}",
+            {% endfor %}
+        ],
+        values: [
+            {% for data in participation_data %}
+                {{ data.total_quantite }},
+            {% endfor %}
+        ]
+    };
 </script>
+<script src="{{ url_for('static', filename='js/participation.js') }}"></script>
 {% endif %}
 </div>
 {% endblock %}
