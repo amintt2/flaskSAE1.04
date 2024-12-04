@@ -73,7 +73,17 @@
                     <i class="fas fa-arrow-left mr-2"></i>
                     Retour
                 </a>
-                {% if not conflicts %}
+                {% if conflicts %}
+                <form action="/produit/delete" method="POST" class="inline">
+                    <input type="hidden" name="id_produit" value="{{ produit_id }}">
+                    <input type="hidden" name="force" value="true">
+                    <button type="submit" 
+                            class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors duration-200">
+                        <i class="fas fa-trash mr-2"></i>
+                        Forcer la suppression
+                    </button>
+                </form>
+                {% else %}
                 <form action="/produit/delete" method="POST" class="inline">
                     <input type="hidden" name="id_produit" value="{{ produit_id }}">
                     <button type="submit" 
