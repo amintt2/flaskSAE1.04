@@ -765,42 +765,45 @@ def etat_recolte():
 def etat_produit():
     mycursor = get_db().cursor()
     
+    # Requête pour obtenir les informations de base sur les produits
     sql = """
         SELECT 
             Produit.ID_Produit,
             Produit.nom_produit,
             Produit.prix_vente,
-            COALESCE(SUM(recolte.quantite), 0) as total_quantite,
-            COALESCE(SUM(recolte.quantite) * Produit.prix_vente, 0) as valeur_totale,
+            IFNULL(SUM(recolte.quantite), 0) as total_quantite,
+            IFNULL(SUM(recolte.quantite), 0) * Produit.prix_vente as valeur_totale,
             COUNT(DISTINCT recolte.ID_Maraicher) as nombre_maraichers,
-            -- Moyenne de quantité par récolte
-            COALESCE(AVG(recolte.quantite), 0) as moyenne_quantite_recolte,
-            -- Nombre total de récoltes
-            COUNT(recolte.ID_recolte) as nombre_recoltes,
-            -- Nombre de saisons par produit
-            (SELECT COUNT(*) FROM est_de_saison WHERE ID_Produit = Produit.ID_Produit) as nombre_saisons,
-            -- Calcul de la part de marché (en pourcentage du total des récoltes)
-            CASE 
-                WHEN (SELECT SUM(quantite) FROM recolte) > 0 
-                THEN COALESCE((SUM(recolte.quantite) * 100.0 / (SELECT SUM(quantite) FROM recolte)), 0)
-                ELSE 0 
-            END as part_marche,
-            -- Ratio valeur/quantité
-            CASE 
-                WHEN SUM(recolte.quantite) > 0 
-                THEN (SUM(recolte.quantite) * Produit.prix_vente) / SUM(recolte.quantite)
-                ELSE 0 
-            END as ratio_valeur_quantite
+            IFNULL(AVG(recolte.quantite), 0) as moyenne_quantite_recolte,
+            COUNT(recolte.ID_recolte) as nombre_recoltes
         FROM Produit
         LEFT JOIN recolte ON Produit.ID_Produit = recolte.ID_Produit
         GROUP BY Produit.ID_Produit, Produit.nom_produit, Produit.prix_vente
-        ORDER BY valeur_totale DESC
     """
     
     mycursor.execute(sql)
-    results = mycursor.fetchall()
+    produits = mycursor.fetchall()
     
-    return render_template('produit/etat_produit.html', results=results)
+    # Calculer le nombre de saisons et la part de marché en Python
+    for produit in produits:
+        # Nombre de saisons
+        mycursor.execute("SELECT COUNT(*) as nombre_saisons FROM est_de_saison WHERE ID_Produit = %s", (produit['ID_Produit'],))
+        produit['nombre_saisons'] = mycursor.fetchone()['nombre_saisons']
+        
+        # Part de marché
+        mycursor.execute("SELECT IFNULL(SUM(quantite), 0) as total_global FROM recolte")
+        total_global = mycursor.fetchone()['total_global'] or 0
+        total_global = float(total_global)  # Convert to float
+        produit['total_quantite'] = float(produit['total_quantite'])  # Convert to float
+        produit['part_marche'] = (produit['total_quantite'] * 100 / total_global) if total_global > 0 else 0
+        
+        # Ratio valeur/quantité
+        produit['ratio_valeur_quantite'] = float(produit['prix_vente'])  # Convert to float
+
+    # Trier les produits par valeur totale
+    produits.sort(key=lambda x: x['valeur_totale'], reverse=True)
+    
+    return render_template('produit/etat_produit.html', results=produits)
 
 @app.template_filter('to_datetime')
 def to_datetime(date_value):
