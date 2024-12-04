@@ -15,6 +15,10 @@
                     La récolte que vous souhaitez supprimer est liée à d'autres éléments dans la base de données.
                     Vous devez d'abord résoudre ces conflits avant de pouvoir la supprimer.
                 </p>
+                <p class="text-gray-600 mt-4">
+                    Note: Les conflits mentionnés ici ne sont pas réels car aucune table ne possède une clé étrangère
+                    pointant vers la table des récoltes. Vous pouvez procéder à la suppression sans résoudre de conflits.
+                </p>
             </div>
 
             {% if conflicts %}
